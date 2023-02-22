@@ -42,6 +42,7 @@ class RegistrationSeralizer(Serializer):
 
 
 class UpdateSerializer(Serializer):
+    Userid=CharField(read_only=True)
     first_name = CharField(max_length=50, required=True)
     last_name = CharField(max_length=50, required=True)
     phonenumber = CharField(max_length=50, required=True)
