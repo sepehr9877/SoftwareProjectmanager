@@ -1,4 +1,5 @@
 from django.contrib.auth.base_user import BaseUserManager
+from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
@@ -39,6 +40,7 @@ class CustomUser(AbstractUser):
     birth=models.DateField(max_length=50,blank=True,null=True)
     address=models.CharField(max_length=50,blank=True,null=True)
     registrationnumber=models.CharField(max_length=50,blank=True,null=True)
+    username = models.CharField(max_length=50,unique=False)
     objects =CustomUserManager()
     USERNAME_FIELD = "email"
     EMAIL_FIELD = 'email'
