@@ -23,7 +23,7 @@ class CustomUser(AbstractUser):
     counselor=3
     manager=4
     role_choice=(
-        ("pateint",'patient'),
+        ("patient",'patient'),
         ("doctor",'doctor'),
         ("counselor",'counselor'),
         ("manager",'manger')
