@@ -1,7 +1,7 @@
 from django.urls import path
-from .views import RegisterApi,UpdateUserApi,CounselorPatientsApi
+from .views import RegisterApi,UpdateUserApi,UpdatePasswordEmailApi
 urlpatterns=[
     path('Register',RegisterApi.as_view()),
-    path('UpdateUserApi/<int:id>',UpdateUserApi.as_view()),
-    path('getAllPatients',CounselorPatientsApi.as_view())
+    path('UpdateUserApi/',UpdateUserApi.as_view()),
+    path('UpdatePasswordEmail',UpdatePasswordEmailApi.as_view())
 ]
