@@ -2,6 +2,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.shortcuts import render
 from rest_framework import status
 from rest_framework.authtoken.models import Token
+from rest_framework.exceptions import ValidationError
 from rest_framework.generics import ListAPIView,ListCreateAPIView
 from rest_framework.mixins import ListModelMixin,CreateModelMixin,UpdateModelMixin,DestroyModelMixin,RetrieveModelMixin
 from rest_framework.response import Response
@@ -46,13 +47,14 @@ class UpdateUserApi(ListAPIView
         selected_token = request.headers['Authorization'].split(' ')[1]
         selectedtoken = Token.objects.filter(key=selected_token).first()
         selected_auth_user=None
-        if selectedtoken.first():
+        if selectedtoken:
             selected_auth_user = CustomUser.objects.filter(id=selectedtoken.user.id)
             self.selectedtoken=selectedtoken
             self.selected_auth_user = selected_auth_user
             self.request.user=self.selected_auth_user.first()
         email = self.request.GET.get('email')
         roles = self.request.GET.get('role')
+
         if email:
             self.selected_user_by_email = CustomUser.objects.filter(email=email)
         if selected_auth_user.first().role in self.auth_roles:
@@ -60,24 +62,22 @@ class UpdateUserApi(ListAPIView
                 self.selected_user_by_email = CustomUser.objects.filter(role=roles,email=email)
             elif roles:
                 self.selected_by_roles = CustomUser.objects.filter(role=roles).all()
+        self.check_object_permissions(request=self.request, obj=self.selected_user_by_email)
 
-        else:
-            self.check_object_permissions(request=self.request, obj=self.selected_user_by_email)
-
-    def get_serializer_context(self):
-        context=super().get_serializer_context()
-        email = self.request.GET.get('email')
-        if email:
-            selected_user=CustomUser.objects.filter(email=email).first()
-            context['user']=selected_user
-        return context
+    # def get_serializer_context(self):
+    #     context=super().get_serializer_context()
+    #     email = self.request.GET.get('email')
+    #     if email:
+    #         selected_user=CustomUser.objects.filter(email=email).first()
+    #         context['user']=selected_user
+    #     return context
     def get_queryset(self):
         if self.selected_user_by_email:
             return self.selected_user_by_email
         if self.selected_by_roles:
             return self.selected_by_roles
         else:
-            return None
+            return CustomUser.objects.all()
     def put(self,request,*args,**kwargs):
         data=self.request.data
         serializer=UpdateSerializer(data=data)

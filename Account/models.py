@@ -27,7 +27,7 @@ class CustomUser(AbstractUser):
         ("patient",'patient'),
         ("doctor",'doctor'),
         ("counselor",'counselor'),
-        ("manager",'manger')
+        ("manager",'manager')
     )
     email=models.EmailField(unique=True,max_length=50)
     first_name = models.CharField(max_length=50)
