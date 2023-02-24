@@ -5,19 +5,21 @@ from Account.models import CustomUser
 from rest_framework import permissions
 class RolePermission(BasePermission):
     message="You dont have role permission for this action"
-    allowroles=['counselor','manager']
+    allowroles=['manager']
     def has_object_permission(self,request, view, obj):
         if request.user.is_anonymous :
             return False
         user=CustomUser.objects.filter(id=request.user.id).first()
-        if obj is None:
+        if request.method in permissions.SAFE_METHODS:
             if user.role in self.allowroles:
                 return True
-            return False
-        if(user.role=="patient"):
-            return request.user.id == obj.first().id
+            else:
+                return False
         else:
-            return True
+            if obj is None:
+                self.message="Please Provide Email Address on request parameter"
+                return False
+            return request.user.id == obj.first().id
 
 
 class PasswordEmailPermission(BasePermission):

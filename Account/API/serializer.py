@@ -54,21 +54,22 @@ class UpdateSerializer(Serializer):
     rigrationumber=CharField(required=False)
     role=CharField(read_only=True)
 
-    def get_initial(self):
-        initial = None
-        if self.context is not None:
-            select_user=self.context['user']
-            if select_user:
-                initial={
-                    "first_name":select_user.first_name,
-                    "username":select_user.username,
-                    "last_name":select_user.last_name,
-                    "email":select_user.email,
-                    "phonenumber":select_user.phonenumber,
-                    "birth":select_user.birth,
-                    "address":select_user.address,
-                }
-        return initial
+    # def get_initial(self):
+    #     initial = None
+    #     if self.context is not None:
+    #         select_user=self.context['user']
+    #         if select_user:
+    #             initial={
+    #                 "first_name":select_user.first_name,
+    #                 "username":select_user.username,
+    #                 "last_name":select_user.last_name,
+    #                 "email":select_user.email,
+    #                 "phonenumber":select_user.phonenumber,
+    #                 "birth":select_user.birth,
+    #                 "address":select_user.address,
+    #             }
+    #     return initial
+
     def update(self,validated_data,user):
         firstname=validated_data["first_name"]
         lastname=validated_data["last_name"]

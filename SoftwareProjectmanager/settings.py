@@ -40,7 +40,8 @@ INSTALLED_APPS = [
     'Account',
     'rest_framework',
     'dj_rest_auth',
-    'rest_framework.authtoken'
+    'rest_framework.authtoken',
+    'Counselor'
 ]
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
