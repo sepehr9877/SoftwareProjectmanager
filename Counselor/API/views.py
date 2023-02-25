@@ -15,6 +15,7 @@ class CounselorPatientApi(ListAPIView):
     def get_serializer_context(self):
         context=super().get_serializer_context()
         context['authuser']=self.authuser
+        context['data']=self.request.data
         return context
     def initial(self, request, *args, **kwargs):
         super().initial(request, *args, **kwargs)
@@ -27,6 +28,7 @@ class CounselorPatientApi(ListAPIView):
                 self.authuser=selected_user
         self.check_permissions(self.request)
     def get_queryset(self):
+
         email=self.request.data.get('email')
         selected_patient=None
         if email:
