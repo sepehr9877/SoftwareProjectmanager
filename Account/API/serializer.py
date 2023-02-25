@@ -108,3 +108,18 @@ class PasswordEmail(Serializer):
             email=email,password=password_crypted
         )
         return True
+class LoginSerializer(Serializer):
+    email=CharField(max_length=50,required=True)
+    password=CharField(max_length=50,required=True)
+
+    def validate(self,data):
+        password=data.get('password')
+        email=data.get('email')
+        selected_user=CustomUser.objects.filter(email__exact=email).first()
+        if selected_user:
+            return True
+        raise ValidationError({"Error":"Email is Wrong"})
+    def get_value(self, dictionary):
+        password=dictionary.get('password')
+        email=dictionary.get('email')
+        return email,password
