@@ -12,6 +12,10 @@ class CounselorPatientApi(ListAPIView):
     serializer_class = CounselorPatientAppointmentSerializer
     permission_classes =(CounselorPermission,)
     authuser=None
+    def get_serializer_context(self):
+        context=super().get_serializer_context()
+        context['authuser']=self.authuser
+        return context
     def initial(self, request, *args, **kwargs):
         super().initial(request, *args, **kwargs)
         token_authorization=self.request.headers['Authorization'].split(' ')[1]
@@ -26,15 +30,16 @@ class CounselorPatientApi(ListAPIView):
         email=self.request.data.get('email')
         selected_patient=None
         if email:
-            selected_patient=CounselorAppointment.objects.filter(Patients__email=email,Counselor__email=self.authuser.first().email)
+            selected_patient=CounselorAppointment.objects.filter(Patients__email=email)
         else:
             selected_patient=CounselorAppointment.objects.all()
         return selected_patient
-    def post(self,request,*args,**kwargs):
+    def put(self,request,*args,**kwargs):
         data=self.request.data
         seralizer=CounselorPatientAppointmentSerializer(data=data)
+        seralizer.context['authuser']=self.authuser
         if seralizer.is_valid():
-            created_patient=seralizer.create(validated_data=self.request.data)
+            created_patient=seralizer.update(counselor=self.authuser,validated_data=self.request.data)
             if created_patient:
                 return Response({
                     "AppointmentID":created_patient.first().id,
@@ -42,8 +47,9 @@ class CounselorPatientApi(ListAPIView):
                     "Counselor":created_patient.first().Counselor.email,
                     "Appointment":created_patient.first().Appointment},status=status.HTTP_201_CREATED)
             else:
-                return Response({"Patients":"Assign to Doctor"},status=status.HTTP_200_OK)
+                return Response({"Error":"This Patient Has Another Appointment with Another Counselor"},status=status.HTTP_400_BAD_REQUEST)
         else:
             return Response({"Error":seralizer.errors},status=status.HTTP_400_BAD_REQUEST)
-
+    def delete(self,request,*args,**kwargs):
+        data=self.request.data
 # Create your views here.
