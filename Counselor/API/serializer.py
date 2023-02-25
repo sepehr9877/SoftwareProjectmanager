@@ -72,8 +72,6 @@ class CounselorPatientAppointmentSerializer(Serializer):
         selected_patient=self.context['SelectedPatients'].first()
         selected_counslor=self.context['SelectedCounselor'].first()
         created_item_id=None
-        print(selected_item)
-        print(selected_counslor)
         if (AssignedToDoctor is None) and ((selected_item.first().Counselor==selected_counslor)or (selected_item.first().Counselor is None)):
             created_item = CounselorAppointment.objects.update(
                 Counselor_id=selected_counslor.id,

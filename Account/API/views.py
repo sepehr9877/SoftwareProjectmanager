@@ -8,7 +8,7 @@ from rest_framework.mixins import ListModelMixin,CreateModelMixin,UpdateModelMix
 from rest_framework.response import Response
 from Account.models import CustomUser
 from .permission import RolePermission, PasswordEmailPermission
-from .serializer import RegistrationSeralizer, UpdateSerializer, PasswordEmail
+from .serializer import RegistrationSeralizer, UpdateSerializer, PasswordEmail, LoginSerializer
 
 
 class RegisterApi(ListAPIView):
@@ -128,3 +128,25 @@ class UpdatePasswordEmailApi(ListAPIView):
             return Response({"Success":"User Updated","email":self.authuser.first().email})
         else:
             return Response({"Error":serilaizer.errors},status=status.HTTP_400_BAD_REQUEST)
+class LoginApi(ListAPIView):
+    serializer_class = LoginSerializer
+
+    def get_queryset(self):return None
+
+    def post(self,request,*args,**kwargs):
+        data=self.request.data
+        serialzier=LoginSerializer(data=data)
+        if serialzier.is_valid():
+            email,password=serialzier.get_value(dictionary=data)
+            auth_user=authenticate(self.request,email=email,password=password)
+            if auth_user:
+                selected_user=CustomUser.objects.filter(email__exact=email).first()
+                selected_token=Token.objects.filter(user_id=selected_user.id).first()
+                return Response({"Status":"Login Successfully",
+                                 "User":selected_user.email,
+                                 "role":selected_user.role,
+                                 "Token":selected_token.key})
+            else:
+                return Response({"Error":"There is no such a user"})
+        else:
+            return Response({"Error":serialzier.errors},status=serialzier.errors)
