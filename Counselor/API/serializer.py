@@ -30,7 +30,7 @@ class CounselorPatientAppointmentSerializer(Serializer):
         if selected_patients_len>1:
 
             for patients in selected_patients:
-                patient=patients.first()
+                patient=patients
                 PatientsData={}
                 PatientsData['first_name'] = patient.Patients.first_name
                 PatientsData['last_name'] = patient.Patients.last_name
