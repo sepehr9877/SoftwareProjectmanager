@@ -14,7 +14,7 @@ class RolePermission(BasePermission):
             if user.role in self.allowroles:
                 return True
             else:
-                return False
+                return request.user.id == obj.first().id
         else:
             if obj is None:
                 self.message="Please Provide Email Address on request parameter"

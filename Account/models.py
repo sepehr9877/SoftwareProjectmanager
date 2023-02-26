@@ -4,6 +4,9 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 
 # Create your models here.
+from rest_framework.exceptions import ValidationError
+
+
 class CustomUserManager(BaseUserManager):
     def create_user(self,email=None,password=None,**extra_fields):
 
@@ -49,4 +52,7 @@ class CustomUser(AbstractUser):
         return True
     def has_module_perms(self, app_label):
         return True
-
+    def clean(self):
+        choice=['patient','doctor','manager','counselor']
+        if not self.role in choice:
+            raise ValidationError({"Error": f"The choices are only{choice} "})

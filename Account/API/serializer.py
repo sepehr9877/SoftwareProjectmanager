@@ -15,6 +15,10 @@ class RegistrationSeralizer(Serializer):
     rigrationumber=CharField(required=False)
 
     def validate(self,data):
+        choice=['patient','doctor','manager','counselor']
+        roles=data.get('roles')
+        if not ( roles in choice):
+            raise ValidationError({"Error": f"the choices are only{choice}"})
         password=data.get('password')
         repassword=data.get('repassword')
         if password!=repassword:
@@ -47,29 +51,17 @@ class UpdateSerializer(Serializer):
     first_name = CharField(max_length=50, required=True)
     last_name = CharField(max_length=50, required=True)
     phonenumber = CharField(max_length=50, required=True)
-    email = EmailField(max_length=50, required=True)
     birth = DateField(required=True)
     username=CharField(max_length=50,required=True)
     address=CharField(max_length=50,required=True)
     rigrationumber=CharField(required=False)
     role=CharField(read_only=True)
-
-    # def get_initial(self):
-    #     initial = None
-    #     if self.context is not None:
-    #         select_user=self.context['user']
-    #         if select_user:
-    #             initial={
-    #                 "first_name":select_user.first_name,
-    #                 "username":select_user.username,
-    #                 "last_name":select_user.last_name,
-    #                 "email":select_user.email,
-    #                 "phonenumber":select_user.phonenumber,
-    #                 "birth":select_user.birth,
-    #                 "address":select_user.address,
-    #             }
-    #     return initial
-
+    email=EmailField(read_only=True)
+    # def to_representation(self, instance):
+    #     data=super().to_representation(instance)
+    #     user=self.context['user'].first()
+    #     data['email']=user.email
+    #     return data
     def update(self,validated_data,user):
         firstname=validated_data["first_name"]
         lastname=validated_data["last_name"]
