@@ -64,15 +64,6 @@ class UpdateUserApi(ListAPIView
                 self.selected_by_roles = CustomUser.objects.filter(role=roles).all()
         self.check_object_permissions(request=self.request, obj=self.selected_user_by_email)
 
-    # def get_serializer_context(self):
-    #     context=super().get_serializer_context()
-    #     email = self.request.GET.get('email')
-    #     if email:
-    #         selected_user=CustomUser.objects.filter(email=email)
-    #         context['user']=selected_user
-    #     else:
-    #         context['user']=CustomUser.objects.filter(email=self.selected_auth_user.first().email)
-    #     return context
     def get_queryset(self):
         if self.selected_user_by_email:
             return self.selected_user_by_email

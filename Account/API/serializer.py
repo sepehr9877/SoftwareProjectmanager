@@ -57,11 +57,6 @@ class UpdateSerializer(Serializer):
     rigrationumber=CharField(required=False)
     role=CharField(read_only=True)
     email=EmailField(read_only=True)
-    # def to_representation(self, instance):
-    #     data=super().to_representation(instance)
-    #     user=self.context['user'].first()
-    #     data['email']=user.email
-    #     return data
     def update(self,validated_data,user):
         firstname=validated_data["first_name"]
         lastname=validated_data["last_name"]
