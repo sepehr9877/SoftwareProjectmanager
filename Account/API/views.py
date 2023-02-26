@@ -37,7 +37,7 @@ class UpdateUserApi(ListAPIView
     authentication_classes = []
     selected_auth_user=None
     selectedtoken=None
-    auth_roles=['doctor','counselor','manager']
+    auth_roles=['manager']
     selected_user_by_email=None
     lookup_url_kwarg = 'email'
     selected_roles=None
@@ -64,13 +64,6 @@ class UpdateUserApi(ListAPIView
                 self.selected_by_roles = CustomUser.objects.filter(role=roles).all()
         self.check_object_permissions(request=self.request, obj=self.selected_user_by_email)
 
-    # def get_serializer_context(self):
-    #     context=super().get_serializer_context()
-    #     email = self.request.GET.get('email')
-    #     if email:
-    #         selected_user=CustomUser.objects.filter(email=email).first()
-    #         context['user']=selected_user
-    #     return context
     def get_queryset(self):
         if self.selected_user_by_email:
             return self.selected_user_by_email

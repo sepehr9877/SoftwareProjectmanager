@@ -8,3 +8,8 @@ class CounselorPermission(BasePermission):
         if user.role in self.role:
             return True
         return False
+    def has_object_permission(self, request, view, obj):
+        self.message = "This Counselor has no permission to delete the appointment"
+        if obj:
+            return request.user.id== obj.Counselor.id
+        return False

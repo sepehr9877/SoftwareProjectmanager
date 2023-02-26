@@ -54,4 +54,12 @@ class CounselorPatientApi(ListAPIView):
             return Response({"Error":seralizer.errors},status=status.HTTP_400_BAD_REQUEST)
     def delete(self,request,*args,**kwargs):
         data=self.request.data
+        id=data.get('id')
+        Counselor_appointment=CounselorAppointment.objects.filter(id=id).first()
+        if Counselor_appointment:
+            self.check_object_permissions(self.request,obj=Counselor_appointment)
+            co=CounselorAppointment.objects.filter(id=id,Counselor_id=self.authuser.first().id).delete()
+            return Response({"success": f"the appointment with this id ={co.first().id} was deleted"},status=status.HTTP_200_OK)
+        return Response({"detail":f"there is no such an appointment with this id ={id}"},status=status.HTTP_400_BAD_REQUEST)
+
 # Create your views here.
