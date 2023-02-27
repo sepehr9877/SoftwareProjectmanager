@@ -57,11 +57,12 @@ class UpdateUserApi(ListAPIView
 
         if email:
             self.selected_user_by_email = CustomUser.objects.filter(email=email)
-        if selected_auth_user.first().role in self.auth_roles:
-            if roles and email:
-                self.selected_user_by_email = CustomUser.objects.filter(role=roles,email=email)
-            elif roles:
-                self.selected_by_roles = CustomUser.objects.filter(role=roles).all()
+        if selected_auth_user:
+            if selected_auth_user.first().role in self.auth_roles:
+                if roles and email:
+                    self.selected_user_by_email = CustomUser.objects.filter(role=roles,email=email)
+                elif roles:
+                    self.selected_by_roles = CustomUser.objects.filter(role=roles).all()
         self.check_object_permissions(request=self.request, obj=self.selected_user_by_email)
 
     def get_queryset(self):
