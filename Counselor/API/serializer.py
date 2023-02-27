@@ -18,39 +18,28 @@ class CounselorPatientAppointmentSerializer(Serializer):
         CounselorData['first_name']=selected_counselor.first_name
         CounselorData['last_name']=selected_counselor.last_name
         CounselorData['email']=selected_counselor.email
+        data['Counselor']=CounselorData
         patient_email=request_data.get('Patients')
-        if  patient_email :
-            selected_patients=CounselorAppointment.objects.filter(Counselor_id=selected_counselor.id,Patients__email=patient_email).all()
-        else:
-            selected_patients=CounselorAppointment.objects.filter(Counselor_id=selected_counselor.id).all()
-        PatientList=[]
-        selected_patients_len=selected_patients.count()
+        return data
+    def get_patient_data(self,selected_patients):
+        selected_patients_len = selected_patients.count()
         PatientsData={}
-        Result=[]
+        result=[]
         if selected_patients_len>1:
-
             for patients in selected_patients:
                 patient=patients
                 PatientsData={}
                 PatientsData['first_name'] = patient.Patients.first_name
                 PatientsData['last_name'] = patient.Patients.last_name
                 PatientsData['email'] = patient.Patients.email
-                data['Appointment']=patient.Appointment
-                PatientList.append(PatientsData)
+                result.append(PatientsData)
         elif selected_patients:
             selected_patients=selected_patients.first()
             PatientsData['first_name'] = selected_patients.Patients.first_name
             PatientsData['last_name'] = selected_patients.Patients.last_name
             PatientsData['email'] = selected_patients.Patients.email
-            data['Appointment'] = selected_patients.Appointment
-            PatientList.append(PatientsData)
-        else:
-            data['Appointment']=None
-
-        data['Counselor']=CounselorData
-        data['Patients']=PatientList
-        Result.append(data)
-        return data
+            result.append(PatientsData)
+        return result
     def validate(self,data):
         CounselorAuth=self.context['authuser'].first()
         Patient_email=data.get('Patients')
