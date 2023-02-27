@@ -4,10 +4,11 @@ from rest_framework.authtoken.models import Token
 from rest_framework.generics import ListAPIView
 from rest_framework.response import Response
 from Account.models import CustomUser
+from .permissions import CheckPermissionSelfAssessment
 from .serializer import SelfAssessMentSerializer
 class SelfAssessmentApi(ListAPIView):
     serializer_class = SelfAssessMentSerializer
-    permission_classes = []
+    permission_classes = [CheckPermissionSelfAssessment,]
     patient=None
     def initial(self, request, *args, **kwargs):
         super().initial(request, *args, **kwargs)
