@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
+    'corsheaders',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
@@ -58,6 +59,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware'
 ]
 
 ROOT_URLCONF = 'SoftwareProjectmanager.urls'
@@ -140,3 +142,17 @@ STATIC_ROOT=os.path.join(BASE_DIR,"static_cdn","static_root")
 MEDIA_URL='/media/'
 MEDIA_ROOT=os.path.join(BASE_DIR,"static_cdn","media_root")
 AUTH_USER_MODEL='Account.CustomUser'
+
+CORS_ORIGIN_WHITELIST = [
+    'http://localhost:3000',
+    # add other domain(s) as needed
+]
+
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
