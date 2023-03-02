@@ -2,8 +2,8 @@
 from rest_framework.serializers import Serializer,CharField,BooleanField
 from Questions.models import SelfAssessment
 from Counselor.models import CounselorAppointment
+from Account.models import CustomUser
 class SelfAssessMentSerializer(Serializer):
-    # Patient = CharField(required=True)
     Question1 = BooleanField(required=True)
     Question2 = BooleanField(required=True)
     Question3 = BooleanField(required=True)
@@ -25,7 +25,11 @@ class SelfAssessMentSerializer(Serializer):
         q9=validated_data.get('Question9')
 
         patient=self.context['patient'].first()
+        CustomUser.objects.filter(id=patient.id).update(
+            assessment=True
+        )
         selected_selfassessment=SelfAssessment.objects.filter(Patient_id=patient.id).first()
+
         if selected_selfassessment is None:
             selected_selfassessment=SelfAssessment.objects.create(
                 Patient_id=patient.id,

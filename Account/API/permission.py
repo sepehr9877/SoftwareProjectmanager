@@ -6,6 +6,13 @@ from rest_framework import permissions
 class RolePermission(BasePermission):
     message="You dont have role permission for this action"
     allowroles=['manager']
+    def has_permission(self, request, view):
+        if request.user.is_anonymous:
+            return False
+        if request.user is None:
+            self.message="set a valid token"
+            return False
+        return True
     def has_object_permission(self,request, view, obj):
         if request.user.is_anonymous :
             return False

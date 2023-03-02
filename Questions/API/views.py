@@ -28,7 +28,7 @@ class SelfAssessmentApi(ListAPIView):
         serializer=SelfAssessMentSerializer(data=data)
         serializer.context['patient']=self.patient
         selected_selfAssessment=SelfAssessment.objects.filter(Patient_id=self.patient.first().id)
-        if not selected_selfAssessment:
+        if selected_selfAssessment:
             return Response({"Success":"Form is already Complete",
                              "Status":"Pending",
                              "Description":"you have already completed the form , wait for counselor"},status=status.HTTP_200_OK)
