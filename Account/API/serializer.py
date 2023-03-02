@@ -31,9 +31,10 @@ class RegistrationSeralizer(Serializer):
     def create(self, validated_data):
         firstname=validated_data.get('firstname')
         lastname=validated_data.get('lastname')
+        address=validated_data.get('address')
         email=validated_data.get('email')
         role=validated_data.get('roles')
-        phone=validated_data.get('phone')
+        phone=validated_data.get('phonenumber')
         birth=validated_data.get('birth')
         password=validated_data.get('password')
         CustomUser.objects.create_user(
@@ -42,6 +43,7 @@ class RegistrationSeralizer(Serializer):
             birth=birth,
             role=role,
             phonenumber=phone,
+            address=address
         )
         return email,password
 
