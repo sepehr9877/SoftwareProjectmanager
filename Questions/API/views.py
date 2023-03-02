@@ -6,6 +6,9 @@ from rest_framework.response import Response
 from Account.models import CustomUser
 from .permissions import CheckPermissionSelfAssessment
 from .serializer import SelfAssessMentSerializer
+from ..models import SelfAssessment
+
+
 class SelfAssessmentApi(ListAPIView):
     serializer_class = SelfAssessMentSerializer
     permission_classes = [CheckPermissionSelfAssessment,]
@@ -24,7 +27,14 @@ class SelfAssessmentApi(ListAPIView):
 
         serializer=SelfAssessMentSerializer(data=data)
         serializer.context['patient']=self.patient
+        selected_selfAssessment=SelfAssessment.objects.filter(Patient_id=self.patient.first().id)
+        if selected_selfAssessment:
+            return Response({"Success":"Form is already Complete",
+                             "Status":"Pending",
+                             "Description":"you have already completed the form , wait for counselor"},status=status.HTTP_200_OK)
+
         if serializer.is_valid():
+
             serializer.create(validated_data=data)
             return Response({"Success":"Form is Complete",
                              "Status":"Pending",

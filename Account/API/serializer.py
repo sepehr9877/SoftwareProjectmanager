@@ -1,7 +1,7 @@
 from django.contrib.auth import authenticate
 from django.contrib.auth.hashers import make_password
 from rest_framework.exceptions import ValidationError
-from rest_framework.serializers import Serializer,ModelSerializer,CharField,EmailField,DateField
+from rest_framework.serializers import Serializer,ModelSerializer,CharField,EmailField,DateField,BooleanField
 from Account.models import CustomUser
 class RegistrationSeralizer(Serializer):
     firstname=CharField(max_length=50,required=True)
@@ -31,9 +31,10 @@ class RegistrationSeralizer(Serializer):
     def create(self, validated_data):
         firstname=validated_data.get('firstname')
         lastname=validated_data.get('lastname')
+        address=validated_data.get('address')
         email=validated_data.get('email')
         role=validated_data.get('roles')
-        phone=validated_data.get('phone')
+        phone=validated_data.get('phonenumber')
         birth=validated_data.get('birth')
         password=validated_data.get('password')
         CustomUser.objects.create_user(
@@ -42,6 +43,7 @@ class RegistrationSeralizer(Serializer):
             birth=birth,
             role=role,
             phonenumber=phone,
+            address=address
         )
         return email,password
 
@@ -57,6 +59,7 @@ class UpdateSerializer(Serializer):
     rigrationumber=CharField(required=False)
     role=CharField(read_only=True)
     email=EmailField(read_only=True)
+    assessment=BooleanField(read_only=True)
     def update(self,validated_data,user):
         firstname=validated_data["first_name"]
         lastname=validated_data["last_name"]
@@ -110,3 +113,4 @@ class LoginSerializer(Serializer):
         password=dictionary.get('password')
         email=dictionary.get('email')
         return email,password
+

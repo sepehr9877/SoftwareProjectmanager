@@ -2,11 +2,12 @@ from django.contrib.auth import authenticate, login, logout
 from django.shortcuts import render
 from rest_framework import status
 from rest_framework.authtoken.models import Token
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import ValidationError, MethodNotAllowed
 from rest_framework.generics import ListAPIView,ListCreateAPIView
 from rest_framework.mixins import ListModelMixin,CreateModelMixin,UpdateModelMixin,DestroyModelMixin,RetrieveModelMixin
 from rest_framework.response import Response
 from Account.models import CustomUser
+from Questions.models import SelfAssessment
 from .permission import RolePermission, PasswordEmailPermission
 from .serializer import RegistrationSeralizer, UpdateSerializer, PasswordEmail, LoginSerializer
 
@@ -34,14 +35,8 @@ class UpdateUserApi(ListAPIView
                     ):
     serializer_class = UpdateSerializer
     permission_classes = (RolePermission,)
-    authentication_classes = []
     selected_auth_user=None
     selectedtoken=None
-    auth_roles=['manager']
-    selected_user_by_email=None
-    lookup_url_kwarg = 'email'
-    selected_roles=None
-    selected_by_roles=None
     def initial(self, request, *args, **kwargs):
         super().initial(request, *args, **kwargs)
         selected_token = request.headers['Authorization'].split(' ')[1]
@@ -52,31 +47,16 @@ class UpdateUserApi(ListAPIView
             self.selectedtoken=selectedtoken
             self.selected_auth_user = selected_auth_user
             self.request.user=self.selected_auth_user.first()
-        email = self.request.GET.get('email')
-        roles = self.request.GET.get('role')
 
-        if email:
-            self.selected_user_by_email = CustomUser.objects.filter(email=email)
-        if selected_auth_user:
-            if selected_auth_user.first().role in self.auth_roles:
-                if roles and email:
-                    self.selected_user_by_email = CustomUser.objects.filter(role=roles,email=email)
-                elif roles:
-                    self.selected_by_roles = CustomUser.objects.filter(role=roles).all()
-        self.check_object_permissions(request=self.request, obj=self.selected_user_by_email)
+        self.check_permissions(request=self.request)
 
     def get_queryset(self):
-        if self.selected_user_by_email:
-            return self.selected_user_by_email
-        if self.selected_by_roles:
-            return self.selected_by_roles
-        else:
-            return CustomUser.objects.all()
+        raise MethodNotAllowed(self.request.method)
     def put(self,request,*args,**kwargs):
         data=self.request.data
         serializer=UpdateSerializer(data=data)
         if serializer.is_valid():
-            updated_user=serializer.update(validated_data=self.request.data, user=self.selected_user_by_email.first())
+            updated_user=serializer.update(validated_data=self.request.data, user=self.selected_auth_user.first())
             return Response({
                             "id":updated_user.id,
                              "first_name":updated_user.first_name,
@@ -86,13 +66,14 @@ class UpdateUserApi(ListAPIView
                             "address":updated_user.address,
                             "birth":updated_user.birth,
                             "email":updated_user.email,
-                            "role":updated_user.role
+                            "role":updated_user.role,
+                            "assessment":updated_user.assessment
             },status=status.HTTP_200_OK
             )
         else:
             return Response({"Error":serializer.errors})
     def delete(self,request,*args,**kwargs):
-        id=self.selected_user_by_email.first().id
+        id=self.selected_auth_user.first().id
         CustomUser.objects.filter(id=id).delete()
         return Response({"DELETE USER":"SUCCESS","id":id},status=status.HTTP_200_OK)
 
@@ -111,7 +92,7 @@ class UpdatePasswordEmailApi(ListAPIView):
             self.request.user=self.authuser
         self.check_permissions(self.request)
 
-    def get_queryset(self):return None
+    def get_queryset(self):raise MethodNotAllowed(self.request.method)
     def put(self,request,*args,**kwargs):
         serilaizer=PasswordEmail(data=self.request.data)
         if serilaizer.is_valid():
@@ -124,9 +105,8 @@ class UpdatePasswordEmailApi(ListAPIView):
             return Response({"Error":serilaizer.errors},status=status.HTTP_400_BAD_REQUEST)
 class LoginApi(ListAPIView):
     serializer_class = LoginSerializer
-
-    def get_queryset(self):return None
-
+    allow_method=['POST']
+    def get_queryset(self):raise MethodNotAllowed(self.request.method)
     def post(self,request,*args,**kwargs):
         data=self.request.data
         serialzier=LoginSerializer(data=data)
@@ -136,11 +116,30 @@ class LoginApi(ListAPIView):
             if auth_user:
                 selected_user=CustomUser.objects.filter(email__exact=email).first()
                 selected_token=Token.objects.filter(user_id=selected_user.id).first()
+                self_assessment=SelfAssessment.objects.filter(Patient_id=selected_user.id)
+                assessment=False
+                if(self_assessment):
+                    assessment=True
                 return Response({"Status":"Login Successfully",
                                  "User":selected_user.email,
                                  "role":selected_user.role,
-                                 "Token":selected_token.key})
+                                 "Token":selected_token.key,
+                                 "assessment":assessment},status=status.HTTP_200_OK)
             else:
                 return Response({"Error":"There is no such a user"})
         else:
-            return Response({"Error":serialzier.errors},status=serialzier.errors)
+            return Response({"Error":serialzier.errors},status=status.HTTP_400_BAD_REQUEST)
+
+class GetAllDetail(ListAPIView):
+    serializer_class = UpdateSerializer
+    authuser=None
+    def initial(self, request, *args, **kwargs):
+        super().initial(request, *args, **kwargs)
+        token=self.request.headers['Authorization'].split(' ')[1]
+        selected_user=Token.objects.filter(key__exact=token)
+        self.authuser=CustomUser.objects.filter(id=selected_user.first().user.id)
+
+    def get_queryset(self):
+        if self.authuser is None:
+            return Response({"Error":"Please set Token into Header"},status=status.HTTP_400_BAD_REQUEST)
+        return self.authuser
