@@ -44,6 +44,7 @@ class CustomUser(AbstractUser):
     address=models.CharField(max_length=50,blank=True,null=True)
     registrationnumber=models.CharField(max_length=50,blank=True,null=True)
     username = models.CharField(max_length=50,unique=False)
+    assessment=models.BooleanField(default=False)
     objects =CustomUserManager()
     USERNAME_FIELD = "email"
     EMAIL_FIELD = 'email'

@@ -1,4 +1,6 @@
 from django.core.exceptions import ValidationError
+from rest_framework import status
+from rest_framework.response import Response
 from rest_framework.serializers import Serializer,EmailField,DateTimeField,BooleanField,CharField
 from Account.models import CustomUser
 from Counselor.models import CounselorAppointment
@@ -9,68 +11,30 @@ class CounselorPatientAppointmentSerializer(Serializer):
     Patients=EmailField(required=True)
     Appointment=DateTimeField(required=True,allow_null=True)
     AssignedToDoctor=BooleanField(read_only=True,default=False)
-    def to_representation(self, instance):
-        data=super().to_representation(instance)
-        request_data=self.context['data']
-        counselor_email = self.context['authuser'].first().email
-        selected_counselor=CustomUser.objects.filter(email__exact=counselor_email).first()
-        CounselorData={}
-        CounselorData['first_name']=selected_counselor.first_name
-        CounselorData['last_name']=selected_counselor.last_name
-        CounselorData['email']=selected_counselor.email
-        data['Counselor']=CounselorData
-        patient_email=request_data.get('Patients')
-        return data
-    def get_patient_data(self,selected_patients):
-        selected_patients_len = selected_patients.count()
-        PatientsData={}
-        result=[]
-        if selected_patients_len>1:
-            for patients in selected_patients:
-                patient=patients
-                PatientsData={}
-                PatientsData['first_name'] = patient.Patients.first_name
-                PatientsData['last_name'] = patient.Patients.last_name
-                PatientsData['email'] = patient.Patients.email
-                result.append(PatientsData)
-        elif selected_patients:
-            selected_patients=selected_patients.first()
-            PatientsData['first_name'] = selected_patients.Patients.first_name
-            PatientsData['last_name'] = selected_patients.Patients.last_name
-            PatientsData['email'] = selected_patients.Patients.email
-            result.append(PatientsData)
-        return result
     def validate(self,data):
-        CounselorAuth=self.context['authuser'].first()
         Patient_email=data.get('Patients')
-        selected_counselor=CustomUser.objects.filter(email__exact=CounselorAuth.email,role__exact="counselor")
         selected_patients=CustomUser.objects.filter(email__exact=Patient_email,role__exact="patient")
-        if (selected_patients.first() is None or selected_counselor.first() is None ):
-            raise ValidationError({"Counselor Email or Patient Email is Wrong "})
-        self.context['SelectedPatients']=selected_patients
-        self.context['SelectedCounselor']=selected_counselor
+        if (selected_patients.first() is None ):
+            raise ValidationError({" Patient Email is Wrong "})
         return True
     def update(self, counselor, validated_data):
-        Counselor_email=self.context['authuser'].first()
+        Counselor_email=counselor.first().email
         Patient_email=validated_data.get('Patients')
         AssignedToDoctor=validated_data.get('AssignedToDoctor')
         Appointment=validated_data.get('Appointment')
-        selected_item = CounselorAppointment.objects.filter(
-                                                            Patients__email=Patient_email,
-                                                            )
-        selected_patient=self.context['SelectedPatients'].first()
-        selected_counslor=self.context['SelectedCounselor'].first()
-        created_item_id=None
-        if (AssignedToDoctor is None) and ((selected_item.first().Counselor==selected_counslor)or (selected_item.first().Counselor is None)):
-            created_item = CounselorAppointment.objects.update(
-                Counselor_id=selected_counslor.id,
-                Patients_id=selected_patient.id,
-                Appointment=Appointment
+        selected_item = CounselorAppointment.objects.filter(Patients__email=Patient_email)
+        if selected_item.first().Counselor is None:
+            selected_item.update(
+                Appointment=Appointment,
+                Counselor_id=counselor.first().id
             )
-            selected_appointment=CounselorAppointment.objects.filter(
-                Counselor_id=selected_counslor.id,Patients_id=selected_patient.id,Appointment=Appointment
-            ).first()
-            created_item_id = selected_appointment.id
+            return Response({"Detail":f"new appointment with {Patient_email}"},status=status.HTTP_200_OK)
 
-        selected_item = CounselorAppointment.objects.filter(id=created_item_id)
-        return selected_item
+        if selected_item.first().Counselor.email==Counselor_email:
+            selected_item.update(
+                Appointment=Appointment,
+            )
+            return Response({"Detail":f"Your Appointment with {Patient_email} updated"},status=status.HTTP_200_OK)
+
+        else:
+            return Response({"Detail":f"Patient {Patient_email} already has an appointment with {selected_item.first().Counselor.email}"},status=status.HTTP_200_OK)
