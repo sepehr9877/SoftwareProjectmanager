@@ -4,15 +4,15 @@ from Questions.models import SelfAssessment
 from Counselor.models import CounselorAppointment
 from Account.models import CustomUser
 class SelfAssessMentSerializer(Serializer):
-    Question1 = BooleanField(required=True)
-    Question2 = BooleanField(required=True)
-    Question3 = BooleanField(required=True)
-    Question4 = BooleanField(required=True)
-    Question5 = BooleanField(required=True)
-    Question6 = BooleanField(required=True)
-    Question7 = BooleanField(required=True)
-    Question8=BooleanField(required=True)
-    Question9=BooleanField(required=True)
+    Question1 = CharField(required=True)
+    Question2 = CharField(required=True)
+    Question3 = CharField(required=True)
+    Question4 = CharField(required=True)
+    Question5 = CharField(required=True)
+    Question6 = CharField(required=True)
+    Question7 = CharField(required=True)
+    Question8=CharField(required=True)
+    Question9=CharField(required=True)
     def create(self, validated_data):
         q1=validated_data.get('Question1')
         q2=validated_data.get('Question2')
