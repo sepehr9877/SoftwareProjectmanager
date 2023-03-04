@@ -13,6 +13,10 @@ class SelfAssessMentSerializer(Serializer):
     Question7 = CharField(required=True)
     Question8=CharField(required=True)
     Question9=CharField(required=True)
+    def __init__(self,*args,**kwargs):
+        super().__init__(*args,**kwargs)
+        self.error=False
+
     def create(self, validated_data):
         q1=validated_data.get('Question1')
         q2=validated_data.get('Question2')

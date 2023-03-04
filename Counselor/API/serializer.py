@@ -11,11 +11,15 @@ class CounselorPatientAppointmentSerializer(Serializer):
     Patients=EmailField(required=True)
     Appointment=DateTimeField(required=True,allow_null=True)
     AssignedToDoctor=BooleanField(read_only=True,default=False)
+    def __init__(self,*args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.error=False
     def validate(self,data):
         Patient_email=data.get('Patients')
         selected_patients=CustomUser.objects.filter(email__exact=Patient_email,role__exact="patient")
         if (selected_patients.first() is None ):
-            raise ValidationError({" Patient Email is Wrong "})
+            self.error=True
+            raise ValidationError({"Error":"Patient Email is Wrong "})
         return True
     def update(self, counselor, validated_data):
         Counselor_email=counselor.first().email
