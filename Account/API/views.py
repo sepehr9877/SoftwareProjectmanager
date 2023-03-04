@@ -10,11 +10,10 @@ from Account.models import CustomUser
 from Questions.models import SelfAssessment
 from .permission import RolePermission, PasswordEmailPermission
 from .serializer import RegistrationSeralizer, UpdateSerializer, PasswordEmail, LoginSerializer
-
-
+import json
 class RegisterApi(ListAPIView):
     serializer_class = RegistrationSeralizer
-    def get_queryset(self):None
+    def get_queryset(self):return None
     def post(self,request,*args,**kwargs):
         data=self.request.data
         serializer=RegistrationSeralizer(data=data)
@@ -27,7 +26,15 @@ class RegisterApi(ListAPIView):
             return Response({"Success":"User Register",
                              "Token":token.key},status=status.HTTP_200_OK)
         else:
-            return Response({"Error": serializer.errors}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            error = json.dumps(serializer.errors)
+            err = json.loads(error)
+            send_error = None
+            if getattr(serializer, 'error'):
+                json_error = err["Error"][0]
+                send_error = {"Error": json_error}
+            else:
+                send_error = serializer.errors
+            return Response(send_error, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 # Create your views here.
@@ -71,7 +78,15 @@ class UpdateUserApi(ListAPIView
             },status=status.HTTP_200_OK
             )
         else:
-            return Response({"Error":serializer.errors})
+            error = json.dumps(serializer.errors)
+            err = json.loads(error)
+            send_error = None
+            if getattr(serializer, 'error'):
+                json_error = err["Error"][0]
+                send_error = {"Error": json_error}
+            else:
+                send_error = serializer.errors
+            return Response(send_error,status=status.HTTP_400_BAD_REQUEST)
     def delete(self,request,*args,**kwargs):
         id=self.selected_auth_user.first().id
         CustomUser.objects.filter(id=id).delete()
@@ -102,7 +117,15 @@ class UpdatePasswordEmailApi(ListAPIView):
                 serilaizer.update(self.request.data,self.authuser)
             return Response({"Success":"User Updated","email":self.authuser.first().email})
         else:
-            return Response({"Error":serilaizer.errors},status=status.HTTP_400_BAD_REQUEST)
+            error = json.dumps(serilaizer.errors)
+            err = json.loads(error)
+            send_error = None
+            if getattr(serilaizer, 'error'):
+                json_error = err["Error"][0]
+                send_error = {"Error": json_error}
+            else:
+                send_error = serilaizer.errors
+            return Response(send_error,status=status.HTTP_400_BAD_REQUEST)
 class LoginApi(ListAPIView):
     serializer_class = LoginSerializer
     allow_method=['POST']
@@ -126,9 +149,17 @@ class LoginApi(ListAPIView):
                                  "Token":selected_token.key,
                                  "assessment":assessment},status=status.HTTP_200_OK)
             else:
-                return Response({"Error":"There is no such a user"})
+                return Response({"Error":"Invalid Password"},status=status.HTTP_400_BAD_REQUEST)
         else:
-            return Response({"Error":serialzier.errors},status=status.HTTP_400_BAD_REQUEST)
+            error = json.dumps(serialzier.errors)
+            err = json.loads(error)
+            send_error = None
+            if getattr(serialzier,'error'):
+                json_error = err["Error"][0]
+                send_error = {"Error": json_error}
+            else:
+                send_error = serialzier.errors
+            return Response(send_error,status=status.HTTP_400_BAD_REQUEST)
 
 class GetAllDetail(ListAPIView):
     serializer_class = UpdateSerializer

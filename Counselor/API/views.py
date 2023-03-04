@@ -1,3 +1,5 @@
+import json
+
 from django.shortcuts import render
 from rest_framework import status
 from rest_framework.authtoken.models import Token
@@ -67,5 +69,13 @@ class SetAppointment(ListAPIView):
         if serailizer.is_valid():
             return serailizer.update(self.authuser,data)
         else:
+            error = json.dumps(serailizer.errors)
+            err = json.loads(error)
+            send_error = None
+            if getattr(serailizer, 'error'):
+                json_error = err["Error"][0]
+                send_error = {"Error": json_error}
+            else:
+                send_error = serailizer.errors
             return Response({"detail":serailizer.errors},status=status.HTTP_400_BAD_REQUEST)
 
