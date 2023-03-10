@@ -21,7 +21,9 @@ class SelfAssessmentApi(ListAPIView):
             self.patient=CustomUser.objects.filter(id=selected_token.user.id)
             self.request.user=self.patient.first()
         self.check_permissions(request=self.request)
-    def get_queryset(self):return None
+    def get_queryset(self):
+        selected_question=SelfAssessment.objects.filter(Patient_id=self.patient.first().id)
+        return selected_question
     def post(self, request, *args, **kwargs):
         data=self.request.data
 
