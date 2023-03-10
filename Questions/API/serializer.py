@@ -48,3 +48,21 @@ class SelfAssessMentSerializer(Serializer):
                 Patients_id=selected_selfassessment.Patient.id
             )
         return selected_counselor_appointment
+class GetAllSelfAssessmentSerialzier(Serializer):
+    Patient=CharField(read_only=True)
+    Firstname=CharField(read_only=True)
+    Lastname=CharField(read_only=True)
+    Question1 = CharField(read_only=True)
+    Question2 = CharField(read_only=True)
+    Question3 = CharField(read_only=True)
+    Question4 = CharField(read_only=True)
+    Question5 = CharField(read_only=True)
+    Question6 = CharField(read_only=True)
+    Question7 = CharField(read_only=True)
+    Question8 = CharField(read_only=True)
+    Question9 = CharField(read_only=True)
+    def to_representation(self, instance):
+        data=super().to_representation(instance)
+        data['Firstname']=instance.Firstname
+        data['Lastname']=instance.Lastname
+        return data

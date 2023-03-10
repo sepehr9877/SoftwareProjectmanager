@@ -1,6 +1,7 @@
 from django.urls import path
-from .views import CounselorAllPatient
+from .views import CounselorAllPatient,CounselorMangeDoctorApi,ListofDoctorsAi
 urlpatterns=[
-    path('counselorallpatient',CounselorAllPatient.as_view()),
-    # path('SetAppointment',SetAppointment.as_view())
+    path('counselor/addappointment/patient',CounselorAllPatient.as_view()),
+    path('counselor/listofdoctors',ListofDoctorsAi.as_view()),
+    path('counselor/manage/patientdoctor',CounselorMangeDoctorApi.as_view()),
 ]
