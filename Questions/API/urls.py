@@ -1,5 +1,6 @@
 from django.urls import path
-from .views import SelfAssessmentApi
+from .views import SelfAssessmentApi,GetAllSelfAssessmentApi
 urlpatterns=[
-    path('selfassessment',SelfAssessmentApi.as_view())
+    path('patient/selfassessment',SelfAssessmentApi.as_view()),
+    path('getallselfassessment',GetAllSelfAssessmentApi.as_view())
 ]

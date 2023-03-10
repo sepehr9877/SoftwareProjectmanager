@@ -21,5 +21,6 @@ urlpatterns = [
     path('',include('Account.API.urls')),
     path('',include('dj_rest_auth.urls')),
     path('',include('Counselor.API.urls')),
-    path('',include('Questions.API.urls'))
+    path('',include('Questions.API.urls')),
+    path('',include('Doctors.API.urls'))
 ]
