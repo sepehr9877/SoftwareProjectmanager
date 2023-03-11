@@ -121,7 +121,13 @@ class CounselorMangeDoctors(Serializer):
             Patient__email=patient
         )
         if selected_counselor_patient.first().Counselor:
-            raise ValidationError({"Error":f"{patient} has an appointment with counselor {selected_counselor_patient.first().Counselor.email}"})
+            if selected_counselor_patient.first().AssigntoDoctor==True:
+                selected_doctor=DoctorAppointment.objects.filter(Patient__email=patient,Doctor__email=doctor).first()
+                raise ValidationError({"Error":f"{patient} has an appointment with Doctor {selected_doctor.Doctor.email}"})
+            else:
+                raise ValidationError(
+                    {"Error": f"{patient} has an appointment with Doctor {selected_counselor_patient.first().Counselor.email}"})
+
         selected_patient_doctor=DoctorAppointment.objects.filter(
             Doctor__email=doctor,Patient__email=patient
         )

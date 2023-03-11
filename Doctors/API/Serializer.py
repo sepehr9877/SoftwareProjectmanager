@@ -38,6 +38,7 @@ class DoctorPatientSerializer(Serializer):
                 raise ValidationError({"Error": "you are setting Accept as False and assigning an Appointment,Wrong "})
         if accept == True:
             if appointment is None:
+                self.error=True
                 raise ValidationError(
                     {"Error": f"You are accepting{patient} so you have to set an appointment with him "})
         if appointment is None:
@@ -46,11 +47,13 @@ class DoctorPatientSerializer(Serializer):
                 raise ValidationError({"Error": "you are setting Accept as True and  the Appointment as Null,Wrong "})
         if appointment:
             if accept == False:
+                self.error=True
                 raise ValidationError(
                     {"Error": f"You are accepting{patient} so you have to set accept as True "})
         id=data.get('id')
         selected_appointment=DoctorAppointment.objects.filter(id=id)
         if selected_appointment.first() is None:
+            self.error=True
             raise ValidationError({"Error":"check the id that you are sending, it was wrong"})
         return True
     def update(self,validated_data,doctor):
@@ -59,7 +62,10 @@ class DoctorPatientSerializer(Serializer):
         Accept=validated_data.get('Accept')
         appointment=validated_data.get('Appointment')
         description=validated_data.get('Description')
+        authuser=self.context['authuser']
         selected_doctor_patient=DoctorAppointment.objects.filter(id=id)
+        if selected_doctor_patient.first().Doctor.email!=authuser.email:
+            return Response({"Error":f"this patient {patient} was assigned to {selected_doctor_patient.first().Doctor} "})
         if selected_doctor_patient.first().Appointment is None:
             has_appointment = self.check_appointment(appointment=appointment, doctor=doctor)
             if has_appointment==True:
@@ -109,8 +115,14 @@ class DoctorCreateNewAppointment(Serializer):
     def validate(self, data):
         appointment=data.get('Appointmen')
         authuser=self.context['authuser']
+        patient=data.get('Patient')
         selected_appointment=DoctorAppointment.objects.filter(Doctor_id=authuser.id,Appointment=appointment)
+        selected_patient_from_table=DoctorAppointment.objects.filter(Patient__email=patient)
+        if selected_patient_from_table.first() is None:
+            self.error=True
+            raise ValidationError({"Error":f"you cant create a meeting with this patient {patient} because this patient is not assigned to any doctor yet"})
         if selected_appointment.first():
+            self.error=True
             raise ValidationError({"Error":f"You have another meeting in this time with {selected_appointment.first().Patient.email}"})
         return True
     def create(self, validated_data):

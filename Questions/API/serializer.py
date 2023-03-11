@@ -42,10 +42,10 @@ class SelfAssessMentSerializer(Serializer):
                 Question6=q6,Question7=q7,Question8=q8,Question9=q9
 
             )
-        selected_counselor_appointment=CounselorAppointment.objects.filter(Patients_id=selected_selfassessment.Patient.id).first()
+        selected_counselor_appointment=CounselorAppointment.objects.filter(Patient_id=selected_selfassessment.Patient.id).first()
         if selected_counselor_appointment is None:
             selected_counselor_appointment=CounselorAppointment.objects.create(
-                Patients_id=selected_selfassessment.Patient.id
+                Patient_id=selected_selfassessment.Patient.id
             )
         return selected_counselor_appointment
 class GetAllSelfAssessmentSerialzier(Serializer):
