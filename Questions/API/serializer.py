@@ -29,24 +29,19 @@ class SelfAssessMentSerializer(Serializer):
         q9=validated_data.get('Question9')
 
         patient=self.context['patient'].first()
-        CustomUser.objects.filter(id=patient.id).update(
+        selected_user=CustomUser.objects.filter(id=patient.id).update(
             assessment=True
         )
-        selected_selfassessment=SelfAssessment.objects.filter(Patient_id=patient.id).first()
+        selected_selfassessment=SelfAssessment.objects.create(
+            Patient_id=patient.id,
+            Question1=q1,
+            Question2=q2,Question3=q3,Question4=q4,Question5=q5,
+            Question6=q6,Question7=q7,Question8=q8,Question9=q9
 
-        if selected_selfassessment is None:
-            selected_selfassessment=SelfAssessment.objects.create(
-                Patient_id=patient.id,
-                Question1=q1,
-                Question2=q2,Question3=q3,Question4=q4,Question5=q5,
-                Question6=q6,Question7=q7,Question8=q8,Question9=q9
-
-            )
-        selected_counselor_appointment=CounselorAppointment.objects.filter(Patient_id=selected_selfassessment.Patient.id).first()
-        if selected_counselor_appointment is None:
-            selected_counselor_appointment=CounselorAppointment.objects.create(
-                Patient_id=selected_selfassessment.Patient.id
-            )
+        )
+        selected_counselor_appointment=CounselorAppointment.objects.create(
+            Patient_id=selected_selfassessment.Patient.id,Description="Wait for Counselor to make you an appointment ,or assign to a doctor"
+        )
         return selected_counselor_appointment
 class GetAllSelfAssessmentSerialzier(Serializer):
     Patient=CharField(read_only=True)

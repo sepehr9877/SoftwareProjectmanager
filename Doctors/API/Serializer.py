@@ -4,8 +4,9 @@ from rest_framework import status
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.serializers import Serializer,EmailField,CharField,BooleanField,DateTimeField
-
+from Counselor.models import CounselorAppointment
 from Account.models import CustomUser
+from Questions.models import SelfAssessment
 from ..models import DoctorAppointment
 
 class DoctorPatientSerializer(Serializer):
@@ -30,6 +31,11 @@ class DoctorPatientSerializer(Serializer):
         appointment = data.get('Appointment')
         patient = data.get('Patient')
         selected_patient = DoctorAppointment.objects.filter(Patient__email=patient)
+        id = data.get('id')
+        selected_appointment = DoctorAppointment.objects.filter(id=id)
+        if selected_appointment.first() is None:
+            self.error = True
+            raise ValidationError({"Error": "check the id that you are sending, it was wrong"})
         if not selected_patient.first():
             raise ValidationError({"Error": "this patient is not assigned to any doctor by counselor yet"})
         if accept == False:
@@ -50,11 +56,7 @@ class DoctorPatientSerializer(Serializer):
                 self.error=True
                 raise ValidationError(
                     {"Error": f"You are accepting{patient} so you have to set accept as True "})
-        id=data.get('id')
-        selected_appointment=DoctorAppointment.objects.filter(id=id)
-        if selected_appointment.first() is None:
-            self.error=True
-            raise ValidationError({"Error":"check the id that you are sending, it was wrong"})
+
         return True
     def update(self,validated_data,doctor):
         id=validated_data.get('id')
@@ -64,8 +66,22 @@ class DoctorPatientSerializer(Serializer):
         description=validated_data.get('Description')
         authuser=self.context['authuser']
         selected_doctor_patient=DoctorAppointment.objects.filter(id=id)
+        if selected_doctor_patient.first().Accept==False:
+            return Response({"Error":f"the patient {patient} was already rejected by {selected_doctor_patient.first().Doctor.email}"},status=status.HTTP_400_BAD_REQUEST)
         if selected_doctor_patient.first().Doctor.email!=authuser.email:
-            return Response({"Error":f"this patient {patient} was assigned to {selected_doctor_patient.first().Doctor} "})
+            return Response({"Error":f"this patient {patient} was assigned to {selected_doctor_patient.first().Doctor},you dont have permission  "},status=status.HTTP_400_BAD_REQUEST)
+        if Accept==False:
+            if description is not None:
+                CustomUser.objects.filter(email__exact=patient).update(assessment=False)
+
+                DoctorAppointment.objects.filter(id=id).update(
+                    Accept=Accept,Description=description,Appointment=None
+                )
+                return Response({"detail":f"patient is rejected by {authuser.email}"},status=status.HTTP_200_OK)
+            else:
+
+                return Response({"Error":f"Doctor {authuser.email} is rejecting patient {patient} ,please provide a description for it"},status=status.HTTP_400_BAD_REQUEST)
+
         if selected_doctor_patient.first().Appointment is None:
             has_appointment = self.check_appointment(appointment=appointment, doctor=doctor)
             if has_appointment==True:

@@ -1,8 +1,8 @@
 import json
 
-from django.shortcuts import render
 from rest_framework import status
 from rest_framework.authtoken.models import Token
+from rest_framework.exceptions import ValidationError
 from rest_framework.generics import ListAPIView
 from rest_framework.response import Response
 
@@ -11,7 +11,17 @@ from .serializer import PatientCounselorAppointmentSerialzier, CounselorMangeDoc
 from .permission import CounselorPermission
 from Account.models import CustomUser
 from Counselor.models import CounselorAppointment
-
+class ParentSerializer(ListAPIView):
+    permission_classes = [CounselorPermission]
+    authuser=None
+    def initial(self, request, *args, **kwargs):
+        super().initial(request, *args, **kwargs)
+        token = self.request.headers['Authorization'].split(' ')[1]
+        selected_token = Token.objects.filter(key__exact=token).first()
+        if selected_token:
+            self.authuser = CustomUser.objects.filter(id=selected_token.user.id)
+            self.request.user = self.authuser.first()
+        self.check_permissions(self.request)
 class CounselorAllPatient(ListAPIView):
     serializer_class = PatientCounselorAppointmentSerialzier
     authuser=None
@@ -33,7 +43,6 @@ class CounselorAllPatient(ListAPIView):
     def get_queryset(self):
         queryset=CounselorAppointment.objects.all()
         for obj in queryset:
-            obj.Doctor=DoctorAppointment.objects.filter(Patient__email=obj.Patient.email).order_by('id').first()
             obj.Firstname=CustomUser.objects.filter(email__exact=obj.Patient.email).first()
             obj.Lastname = CustomUser.objects.filter(email__exact=obj.Patient.email).first()
         return queryset
@@ -97,3 +106,26 @@ class ListofDoctorsAi(ListAPIView):
     def get_queryset(self):
         queryset=CustomUser.objects.filter(role__exact='doctor').all()
         return queryset
+
+
+class CounselorPatientAppointmentApi(ParentSerializer):
+    serializer_class = PatientCounselorAppointmentSerialzier
+
+    def get_queryset(self):
+        data=self.request.data
+        if (data.get('Appointment')) is None:
+            raise ValidationError({"Error": "You need to set a data in request body"})
+
+        appointment=data.get('Appointment')
+        self.query=CounselorAppointment.objects.filter(
+            Counselor_id=self.authuser.first().id,Appointment__date=appointment
+        ).all()
+        for obj in self.query:
+            obj.Firstname=self.query.filter(id=obj.id).first().Patient
+            obj.Lastname=self.query.filter(id=obj.id).first().Patient
+        return self.query
+
+
+
+
+

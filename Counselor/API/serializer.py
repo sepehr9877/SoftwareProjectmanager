@@ -10,25 +10,36 @@ from Doctors.models import DoctorAppointment
 from Questions.models import SelfAssessment
 
 class PatientCounselorAppointmentSerialzier(Serializer):
+    id=CharField(required=True)
     Patient = EmailField(required=True)
     Firstname=CharField(read_only=True)
     Lastname=CharField(read_only=True)
     Appointment = DateTimeField(allow_null=True,required=True)
     Accept = BooleanField(allow_null=False,required=True)
-    Description =CharField(max_length=100,allow_null=True,allow_blank=True,required=True)
+    Description =CharField(max_length=100,allow_null=False,allow_blank=False,required=True)
     Doctor=EmailField(read_only=True)
     AssigntoDoctor=BooleanField(read_only=True)
     Counselor=EmailField(read_only=True,allow_null=True)
+    Doctor=EmailField(read_only=True,allow_null=True)
     def __init__(self,*args,**kwargs):
         super().__init__(*args,**kwargs)
         self.error = False
     def validate(self, data):
+        id=data.get('id')
         accept=data.get('Accept')
         appointment=data.get('Appointment')
         patient=data.get('Patient')
-        selected_patient=CounselorAppointment.objects.filter(Patient__email=patient)
-        if not selected_patient.first():
-            raise  ValidationError({"Error":"this patient has not completed the self assessment yet"})
+        selected_patient=CounselorAppointment.objects.filter(id=id)
+        if selected_patient.first() is None:
+            self.error=True
+            raise  ValidationError({"Error":"you are sending a wrong id"})
+        if selected_patient.first().Counselor:
+            self.error = True
+            raise ValidationError({"Error": "this record was already booked or rejected"})
+
+        if selected_patient.first().Patient.email !=patient:
+            self.error=True
+            raise ValidationError({"Error":"you are sending a wrong email address for patient"})
         if accept==False:
             if appointment is not None:
                 self.error = True
@@ -48,24 +59,27 @@ class PatientCounselorAppointmentSerialzier(Serializer):
 
     def to_representation(self, instance):
         data=super().to_representation(instance)
-        data['Doctor']=instance.Doctor.Doctor.email if instance.Doctor else None
         data['Firstname']=instance.Firstname.first_name
         data['Lastname']=instance.Lastname.last_name
         return data
     def update(self, counselor, validated_data):
+        id=validated_data.get('id')
         appointment=validated_data.get('Appointment')
         Accept=validated_data.get('Accept')
         PatientEmail=validated_data.get('Patient')
         Description=validated_data.get('Description')
-        selected_appointment=CounselorAppointment.objects.filter(
-            Counselor_id=counselor.id,
-            Patient__email=PatientEmail
-        )
-        if selected_appointment.first():
-            return Response({"Error":f"the pateint {PatientEmail} and"
-                              f" the counselor {selected_appointment.first().Counselor.email} "
-                              f"have meeting together"},status=status.HTTP_400_BAD_REQUEST)
-        else:
+        selected_appointment=CounselorAppointment.objects.filter(id=id)
+        if(selected_appointment.first().Accept==False):
+            return Response({"Error":"this meeting was already canceled by a counselor"},status=status.HTTP_400_BAD_REQUEST)
+        if (selected_appointment.first().Counselor is None and Accept==False):
+            selected_appointment.update(
+                Accept=False,Appointment=None,Counselor_id=counselor.id,Description=Description
+            )
+            CustomUser.objects.filter(email__exact=PatientEmail).update(
+                assessment=False
+            )
+            return Response({"detail":f"Appointment is rejected and User {selected_appointment.first().Patient.email} has to fill the assessment form again"},status=status.HTTP_200_OK)
+        if(selected_appointment.first().Counselor is None and Accept==True):
             has_appointment=self.check_appointment(counselor=counselor,appointment=appointment)
             if has_appointment==True:
                 return Response({
@@ -74,20 +88,22 @@ class PatientCounselorAppointmentSerialzier(Serializer):
             else:
 
                 CounselorAppointment.objects.filter(
-
-                    Patient__email=PatientEmail
+                    id=id
                 ).update(
                     Counselor_id=counselor.id,
-                    Appointment=appointment,Accept=Accept,Description=Description
+                    Appointment=appointment,Accept=True,Description=Description
                 )
                 selected_counselor_appointment=CounselorAppointment.objects.filter(
-                    Patient__email=PatientEmail,Counselor_id=counselor.id,Appointment=appointment
+                    id=id
                 ).first()
-                return Response({"Patient":selected_counselor_appointment.Patient.email,
+                return Response({"id":selected_counselor_appointment.id,
+                                 "Patient":selected_counselor_appointment.Patient.email,
                                  "Counselor":selected_counselor_appointment.Counselor.email,
                                  "Appointment":selected_counselor_appointment.Appointment,
                                  "Accept":selected_counselor_appointment.Accept,
-                                 "AssigntoDoctor":selected_counselor_appointment.AssigntoDoctor},status=status.HTTP_200_OK)
+                                 "AssigntoDoctor":selected_counselor_appointment.AssigntoDoctor,
+                                 "Description":selected_counselor_appointment.Description,
+                                 "Doctor":selected_counselor_appointment.Doctor},status=status.HTTP_200_OK)
     def check_appointment(self,appointment,counselor):
         selected_time = appointment.split('T')
         time_obj = datetime.strptime(selected_time[1], '%H:%M:%S')
@@ -107,6 +123,7 @@ class PatientCounselorAppointmentSerialzier(Serializer):
 
 
 class CounselorMangeDoctors(Serializer):
+    id=CharField(required=True)
     Doctor=EmailField(required=True)
     Patient=EmailField(required=True)
     Description=CharField(required=True,allow_null=False)
@@ -114,28 +131,37 @@ class CounselorMangeDoctors(Serializer):
         super().__init__(*args,**kwargs)
         self.error = False
     def validate(self, data):
+        id=data.get('id')
         doctor=data.get('Doctor')
         authuser=self.context['authuser']
         patient=data.get('Patient')
         selected_counselor_patient=CounselorAppointment.objects.filter(
-            Patient__email=patient
+            id=id
         )
-        if selected_counselor_patient.first().Counselor:
-            if selected_counselor_patient.first().AssigntoDoctor==True:
-                selected_doctor=DoctorAppointment.objects.filter(Patient__email=patient,Doctor__email=doctor).first()
-                raise ValidationError({"Error":f"{patient} has an appointment with Doctor {selected_doctor.Doctor.email}"})
-            else:
-                raise ValidationError(
-                    {"Error": f"{patient} has an appointment with Doctor {selected_counselor_patient.first().Counselor.email}"})
-
-        selected_patient_doctor=DoctorAppointment.objects.filter(
-            Doctor__email=doctor,Patient__email=patient
-        )
-        if selected_patient_doctor.first():
+        if selected_counselor_patient is None:
             self.error=True
-            raise ValidationError({"Error":f"{patient} was already assigned to {doctor}"})
+            raise  ValidationError({"Error":"you are sending a wrong id"})
+        if selected_counselor_patient.first().Patient.email != patient:
+            self.error = True
+            raise ValidationError({"Error": "you are sending a wrong email address for patient"})
+
+        if selected_counselor_patient.first() is None:
+            self.error = True
+            raise ValidationError({"Error":"you have to set id field of Counselor Patient record,there is no record with this id in CounselorPatient records"})
+        if selected_counselor_patient.first().Counselor:
+            self.error = True
+            raise ValidationError({"Error": "this record was already modified by another counselor"})
+        if selected_counselor_patient.first().AssigntoDoctor==True:
+            self.error = True
+            raise ValidationError({"Error":f"the patient was already assigned to a doctor"})
+        selected_doctor=CustomUser.objects.filter(email__exact=doctor)
+
+        if selected_doctor.first() is None:
+            self.error = True
+            raise ValidationError({"Error": f"you are sending a wrong email address for doctor"})
         return True
     def create(self, validated_data):
+        id=validated_data.get('id')
         doctor_email=validated_data.get('Doctor')
         description=validated_data.get('Description')
         authuser=self.context['authuser']
@@ -146,19 +172,22 @@ class CounselorMangeDoctors(Serializer):
         patient=CustomUser.objects.filter(
             email__exact=patient_email
         ).first()
+
         CounselorAppointment.objects.filter(
-            Patient__email=patient_email,
+            id=id,
 
         ).update(
             Counselor_id=authuser.first().id,
             Accept=True,
             AssigntoDoctor=True,
-            Description=description
+            Description=description,
+            Doctor_id=doctor.id
         )
         create_appointment_with_doctor=DoctorAppointment.objects.create(
             Doctor_id=doctor.id,Patient_id=patient.id,Accept=True
         )
         return Response({
+            "id":create_appointment_with_doctor.id,
             "Doctor":create_appointment_with_doctor.Doctor.email,
             "Patient":create_appointment_with_doctor.Patient.email,
             "Description":description,
