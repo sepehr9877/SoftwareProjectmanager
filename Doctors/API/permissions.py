@@ -8,7 +8,6 @@ class DoctorPatientPermission(BasePermission):
         if request.user.is_anonymous:
             return False
         if user.role in self.allow_roles:
-            print(user.role)
             return True
         else:
             return False

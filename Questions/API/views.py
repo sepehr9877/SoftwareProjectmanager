@@ -29,20 +29,20 @@ class SelfAssessmentApi(ListAPIView):
 
         serializer=SelfAssessMentSerializer(data=data)
         serializer.context['patient']=self.patient
-        selected_selfAssessment=SelfAssessment.objects.filter(Patient_id=self.patient.first().id)
-        if selected_selfAssessment:
+        selected_selfAssessment=CustomUser.objects.filter(id=self.patient.first().id,role__exact='patient')
+        if selected_selfAssessment.first().assessment==True:
             return Response({"Success":"Form is already Complete",
                              "Status":"Pending",
                              "Description":"you have already completed the form , wait for counselor"},status=status.HTTP_200_OK)
-
-        if serializer.is_valid():
-
-            serializer.create(validated_data=data)
-            return Response({"Success":"Form is Complete",
-                             "Status":"Pending",
-                             "Description":"Wait for Counselor to make you an appointment ,or assign to a doctor"},status=status.HTTP_200_OK)
         else:
-            return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
+            if serializer.is_valid():
+
+                serializer.create(validated_data=data)
+                return Response({"Success":"Form is Complete",
+                                 "Status":"Pending",
+                                 "Description":"Wait for Counselor to make you an appointment ,or assign to a doctor"},status=status.HTTP_200_OK)
+
+        return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
 
 # Create your views here.
 class GetAllSelfAssessmentApi(ListAPIView):
