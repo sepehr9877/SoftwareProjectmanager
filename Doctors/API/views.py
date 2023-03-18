@@ -39,7 +39,7 @@ class DoctorPatientApi(ListAPIView):
         self.check_permissions(self.request)
 
     def get_queryset(self):
-        queryset=DoctorAppointment.objects.all()
+        queryset=DoctorAppointment.objects.all().filter(Doctor__email=self.authuser.email)
         for obj in queryset:
             obj.Firstname=obj.Patient.first_name
             obj.Lastname=obj.Patient.last_name
