@@ -95,10 +95,10 @@ class DoctorCreateNewAppointmentApi(ListAPIView):
 class DoctorGetAppointmentApi(DoctorParentApi):
     serializer_class = DoctorPatientSerializer
     def get_queryset(self):
-        data=self.request.data
-        appointment=data.get('Appointment')
+        data=self.request.GET
+        appointment=data.get('appointment')
         if appointment is None:
-            raise ValidationError({"Error":"set appointment in request body"})
+            raise ValidationError({"Error":"set appointment in request params"})
 
         query=DoctorAppointment.objects.filter(Appointment__date=appointment,Doctor_id=self.authuser.id)
         for obj in query:

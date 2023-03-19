@@ -112,11 +112,11 @@ class CounselorPatientAppointmentApi(ParentSerializer):
     serializer_class = PatientCounselorAppointmentSerialzier
 
     def get_queryset(self):
-        data=self.request.data
-        if (data.get('Appointment')) is None:
-            raise ValidationError({"Error": "You need to set a data in request body"})
+        data=self.request.GET
+        if (data.get('appointment')) is None:
+            raise ValidationError({"Error": "You need to set a data in request params"})
 
-        appointment=data.get('Appointment')
+        appointment=data.get('appointment')
         self.query=CounselorAppointment.objects.filter(
             Counselor_id=self.authuser.first().id,Appointment__date=appointment
         ).all()

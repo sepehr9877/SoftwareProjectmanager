@@ -18,13 +18,12 @@ class CheckPermissionGetSelfAssessment(BasePermission):
         user=request.user
         if user.is_anonymous:
             return False
-        print(user.role)
         if user.role in self.roles:
             return True
         else:
             return False
     def has_object_permission(self, request, view, obj):
         if obj is None:
-            self.message="You need to send Patient email with request body"
+            self.message="You need to send Patient email with request params"
             return False
         return True
