@@ -32,25 +32,25 @@ class PatientCounselorAppointmentSerialzier(Serializer):
         selected_patient=CounselorAppointment.objects.filter(id=id)
         if selected_patient.first() is None:
             self.error=True
-            raise  ValidationError({"Error":"you are sending a wrong id"})
+            raise  ValidationError({"Error":"You are sending a wrong id"})
         if selected_patient.first().Counselor:
             self.error = True
-            raise ValidationError({"Error": "this record was already booked or rejected"})
+            raise ValidationError({"Error": "This record was already booked or rejected"})
 
         if selected_patient.first().Patient.email !=patient:
             self.error=True
-            raise ValidationError({"Error":"you are sending a wrong email address for patient"})
+            raise ValidationError({"Error":"You are sending a wrong email address for patient"})
         if accept==False:
             if appointment is not None:
                 self.error = True
-                raise ValidationError({"Error":"you are setting Accept as False and assigning an Appointment,Wrong "})
+                raise ValidationError({"Error":"You are setting Accept as False and assigning an Appointment,Wrong "})
         if accept==True:
             if appointment is None:
                 raise ValidationError({"Error":f"You are accepting{patient} so you have to set an appointment with him "})
         if appointment is None:
             if accept==True:
                 self.error = True
-                raise ValidationError({"Error": "you are setting Accept as True and  the Appointment as Null,Wrong "})
+                raise ValidationError({"Error": "You are setting Accept as True and  the Appointment as Null,Wrong "})
         if appointment:
             if accept==False:
                 raise ValidationError(
@@ -140,25 +140,25 @@ class CounselorMangeDoctors(Serializer):
         )
         if selected_counselor_patient is None:
             self.error=True
-            raise  ValidationError({"Error":"you are sending a wrong id"})
+            raise  ValidationError({"Error":"You are sending a wrong id"})
         if selected_counselor_patient.first().Patient.email != patient:
             self.error = True
-            raise ValidationError({"Error": "you are sending a wrong email address for patient"})
+            raise ValidationError({"Error": "You are sending a wrong email address for patient"})
 
         if selected_counselor_patient.first() is None:
             self.error = True
-            raise ValidationError({"Error":"you have to set id field of Counselor Patient record,there is no record with this id in CounselorPatient records"})
+            raise ValidationError({"Error":"You have to set id field of Counselor Patient record,there is no record with this id in CounselorPatient records"})
         if selected_counselor_patient.first().Counselor:
             self.error = True
-            raise ValidationError({"Error": "this record was already modified by another counselor"})
+            raise ValidationError({"Error": "This record was already modified by another counselor"})
         if selected_counselor_patient.first().AssigntoDoctor==True:
             self.error = True
-            raise ValidationError({"Error":f"the patient was already assigned to a doctor"})
+            raise ValidationError({"Error":f"The patient was already assigned to a doctor"})
         selected_doctor=CustomUser.objects.filter(email__exact=doctor)
 
         if selected_doctor.first() is None:
             self.error = True
-            raise ValidationError({"Error": f"you are sending a wrong email address for doctor"})
+            raise ValidationError({"Error": f"You are sending a wrong email address for doctor"})
         return True
     def create(self, validated_data):
         id=validated_data.get('id')
