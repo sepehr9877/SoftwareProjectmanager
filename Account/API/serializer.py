@@ -67,6 +67,7 @@ class UpdateSerializer(Serializer):
     role=CharField(read_only=True)
     email=EmailField(read_only=True)
     assessment=BooleanField(read_only=True)
+    accept=BooleanField(read_only=True)
     def update(self,validated_data,user):
         firstname=validated_data["first_name"]
         lastname=validated_data["last_name"]
