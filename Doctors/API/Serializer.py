@@ -58,6 +58,11 @@ class DoctorPatientSerializer(Serializer):
                     {"Error": f"You are accepting{patient} so you have to set accept as True "})
 
         return True
+    def validate_id(self,value):
+
+        if value is None:
+            raise ValidationError({"Error":"this field is required"})
+        return value
     def update(self,validated_data,doctor):
         id=validated_data.get('id')
         patient=validated_data.get('Patient')
@@ -101,6 +106,7 @@ class DoctorPatientSerializer(Serializer):
                                  "Appointment":selected_appointment.Appointment,
                                  "Description":selected_appointment.Description},status=status.HTTP_201_CREATED)
         else:
+
             return Response({"Error":f"Patient {patient} has another meeting on {selected_doctor_patient.first().Appointment.day}th at {selected_doctor_patient.first().Appointment.time()}"},status=status.HTTP_400_BAD_REQUEST)
 
     def check_appointment(self, appointment, doctor):

@@ -23,5 +23,6 @@ urlpatterns = [
     path('',include('Counselor.API.urls')),
     path('',include('Questions.API.urls')),
     path('',include('Doctors.API.urls')),
-    path('',include('Patient.API.urls'))
+    path('',include('Patient.API.urls')),
+    path('',include('Manager.API.urls'))
 ]

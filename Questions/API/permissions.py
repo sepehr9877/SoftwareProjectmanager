@@ -1,4 +1,4 @@
-
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import BasePermission
 
 class CheckPermissionSelfAssessment(BasePermission):
@@ -8,6 +8,8 @@ class CheckPermissionSelfAssessment(BasePermission):
         if user.is_anonymous:
             return False
         if user.role=="patient":
+            if user.accept==False:
+                raise PermissionDenied("you no longer have permission as patient")
             return True
         else:
             return False
@@ -19,6 +21,8 @@ class CheckPermissionGetSelfAssessment(BasePermission):
         if user.is_anonymous:
             return False
         if user.role in self.roles:
+            if user.accept==False:
+                raise PermissionDenied("manager either have not accepted you yet or just rejected you . you dont have permission")
             return True
         else:
             return False

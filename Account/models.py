@@ -45,6 +45,8 @@ class CustomUser(AbstractUser):
     registrationnumber=models.CharField(max_length=50,blank=True,null=True)
     username = models.CharField(max_length=50,unique=False)
     assessment=models.BooleanField(default=False)
+    accept=models.BooleanField(default=False)
+    description=models.CharField(default="Pending",max_length=100)
     objects =CustomUserManager()
     USERNAME_FIELD = "email"
     EMAIL_FIELD = 'email'
