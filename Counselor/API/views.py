@@ -110,7 +110,16 @@ class ListofDoctorsAi(ListAPIView):
 
 class CounselorPatientAppointmentApi(ParentSerializer):
     serializer_class = PatientCounselorAppointmentSerialzier
+    permission_classes = [CounselorPermission]
+    def initial(self, request, *args, **kwargs):
 
+        super().initial(request, *args, **kwargs)
+        token = self.request.headers['Authorization'].split(' ')[1]
+        selected_token = Token.objects.filter(key__exact=token).first()
+        if selected_token:
+            self.authuser = CustomUser.objects.filter(id=selected_token.user.id)
+            self.request.user = self.authuser.first()
+        self.check_permissions(self.request)
     def get_queryset(self):
         data=self.request.GET
         if (data.get('appointment')) is None:

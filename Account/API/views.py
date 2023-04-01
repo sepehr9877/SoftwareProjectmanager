@@ -24,6 +24,8 @@ class RegisterApi(ListAPIView):
             token=Token.objects.create(user_id=selected_user.id)
             login(request=self.request,user=auth)
             return Response({"Success":"User Register",
+                             "description":selected_user.description,
+                             "accept":selected_user.accept,
                              "Token":token.key},status=status.HTTP_200_OK)
         else:
             error = json.dumps(serializer.errors)
@@ -147,6 +149,8 @@ class LoginApi(ListAPIView):
                                  "User":selected_user.email,
                                  "role":selected_user.role,
                                  "Token":selected_token.key,
+                                 "description":selected_user.description,
+                                 "accept":selected_user.accept,
                                  "assessment":assessment},status=status.HTTP_200_OK)
             else:
                 return Response({"Error":"Invalid Password"},status=status.HTTP_400_BAD_REQUEST)

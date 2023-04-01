@@ -17,7 +17,6 @@ class PatientCounselorAppointmentSerialzier(Serializer):
     Appointment = DateTimeField(allow_null=True,required=True)
     Accept = BooleanField(allow_null=False,required=True)
     Description =CharField(max_length=100,allow_null=False,allow_blank=False,required=True)
-    Doctor=EmailField(read_only=True)
     AssigntoDoctor=BooleanField(read_only=True)
     Counselor=EmailField(read_only=True,allow_null=True)
     Doctor=EmailField(read_only=True,allow_null=True)
@@ -143,7 +142,7 @@ class CounselorMangeDoctors(Serializer):
             raise  ValidationError({"Error":"You are sending a wrong id"})
         if selected_counselor_patient.first().Patient.email != patient:
             self.error = True
-            raise ValidationError({"Error": "you are sending a wrong email address for patient"})
+            raise ValidationError({"Error": "You are sending a wrong email address for patient"})
 
         if selected_counselor_patient.first() is None:
             self.error = True
@@ -156,9 +155,9 @@ class CounselorMangeDoctors(Serializer):
             raise ValidationError({"Error":f"The patient was already assigned to a doctor"})
         selected_doctor=CustomUser.objects.filter(email__exact=doctor)
 
-        if selected_doctor.first() is None:
+        if (selected_doctor.first().accept==False or selected_doctor.first() is None):
             self.error = True
-            raise ValidationError({"Error": f"you are sending a wrong email address for doctor"})
+            raise ValidationError({"Error": f"You are sending a wrong email address for doctor or this doctor is not accepted by manager yet"})
         return True
     def create(self, validated_data):
         id=validated_data.get('id')

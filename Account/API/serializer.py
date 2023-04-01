@@ -50,6 +50,8 @@ class RegistrationSeralizer(Serializer):
             phonenumber=phone,
             address=address
         )
+        if role =="patient":
+            CustomUser.objects.filter(email__exact=email).update(accept=True,description="system accepted you")
         return email,password
 
 
