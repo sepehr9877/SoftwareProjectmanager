@@ -106,8 +106,30 @@ class DoctorPatientSerializer(Serializer):
                                  "Appointment":selected_appointment.Appointment,
                                  "Description":selected_appointment.Description},status=status.HTTP_201_CREATED)
         else:
+            selected_doctor=selected_doctor_patient.first().Doctor.email
+            has_appointment = self.check_appointment(appointment=appointment, doctor=doctor)
+            if selected_doctor==authuser.email:
 
-            return Response({"Error":f"Patient {patient} has another meeting on {selected_doctor_patient.first().Appointment.day}th at {selected_doctor_patient.first().Appointment.time()}"},status=status.HTTP_400_BAD_REQUEST)
+                if has_appointment == True:
+                    return Response({
+                                        "Error": f"have another appointment in {self.selected_next_appointmet.time()} on {self.selected_next_appointmet.day}th"},
+                                    status=status.HTTP_400_BAD_REQUEST)
+                else:
+                    updated_appointment = DoctorAppointment.objects.filter(
+                        id=id
+
+                    ).update(Appointment=appointment, Accept=Accept, Description=description)
+                    selected_appointment = DoctorAppointment.objects.filter(id=id).first()
+                    return Response({"id": selected_appointment.id,
+                                     "Doctor": selected_appointment.Doctor.email,
+                                     "Patient": selected_appointment.Patient.email,
+                                     "Firstname": selected_appointment.Patient.first_name,
+                                     "Lastname": selected_appointment.Patient.last_name,
+                                     "Status": selected_appointment.Accept,
+                                     "Appointment": selected_appointment.Appointment,
+                                     "Description": selected_appointment.Description}, status=status.HTTP_201_CREATED)
+            else:
+                return Response({"Error":f"Patient {patient} has another meeting on {selected_doctor_patient.first().Appointment.day}th at {selected_doctor_patient.first().Appointment.time()}"},status=status.HTTP_400_BAD_REQUEST)
 
     def check_appointment(self, appointment, doctor):
         selected_time = appointment.split('T')
