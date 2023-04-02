@@ -6,6 +6,8 @@ from Account.models import CustomUser
 
 
 class AcceptRejectDoctorSerializer(Serializer):
+    first_name = CharField(read_only=True)
+    last_name = CharField(read_only=True)
     email=EmailField(required=True)
     accept=BooleanField(required=True)
     description=CharField(required=True)
@@ -34,6 +36,8 @@ class AcceptRejectDoctorSerializer(Serializer):
 
 
 class AcceptRejectCounselorSerializer(Serializer):
+    first_name = CharField(read_only=True)
+    last_name = CharField(read_only=True)
     email=EmailField(required=True)
     accept=BooleanField(required=True)
     description=CharField(required=True)
@@ -67,9 +71,12 @@ class ManagerDateDocotorPatientSerializer(Serializer):
     Description =CharField(read_only=True)
 
 class AcceptRejectPatientSerializer(Serializer):
+    first_name=CharField(read_only=True)
+    last_name=CharField(read_only=True)
     email=EmailField(required=True)
     accept=BooleanField(required=True)
     description=CharField(required=True)
+
     def validate(self, data):
         email=data.get('email')
         role=['patient']
