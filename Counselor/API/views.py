@@ -104,7 +104,7 @@ class ListofDoctorsAi(ListAPIView):
         self.check_permissions(self.request)
 
     def get_queryset(self):
-        queryset=CustomUser.objects.filter(role__exact='doctor').all()
+        queryset=CustomUser.objects.filter(role__exact='doctor',accept=True).all()
         return queryset
 
 

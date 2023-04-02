@@ -197,3 +197,4 @@ class ListofDoctorsSerializer(Serializer):
     email=EmailField(read_only=True)
     first_name=CharField(read_only=True)
     last_name=CharField(read_only=True)
+    accept=BooleanField(read_only=True)

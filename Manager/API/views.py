@@ -56,7 +56,7 @@ class AcceptRejectDoctorApi(AcceptRejectParentApi):
 # Create your views here.
 
 class AcceptRejectCounselorApi(AcceptRejectParentApi):
-    serializer_class = AcceptRejectDoctorSerializer
+    serializer_class = AcceptRejectCounselorSerializer
     permission_classes = [ManagerPermission]
     def get_queryset(self):
         query=CustomUser.objects.filter(role__exact='counselor').all()
