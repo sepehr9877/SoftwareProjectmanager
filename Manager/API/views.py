@@ -10,17 +10,20 @@ from rest_framework.response import Response
 from Account.models import CustomUser
 from Counselor.models import CounselorAppointment
 from Doctors.models import DoctorAppointment
+from Questions.models import SelfAssessment
 from .permissions import ManagerPermission
 from rest_framework.generics import ListAPIView
 from .Serializers import AcceptRejectDoctorSerializer, AcceptRejectCounselorSerializer, \
-    ManagerDateDocotorPatientSerializer, AcceptRejectPatientSerializer
+    ManagerDateDocotorPatientSerializer, AcceptRejectPatientSerializer, MangerBussinessInfo
 
 
 class AcceptRejectParentApi(ListAPIView):
     authuser=None
     def initial(self, request, *args, **kwargs):
+
         super().initial(request, *args, **kwargs)
         token = self.request.headers['Authorization'].split(' ')[1]
+
         selected_token = Token.objects.filter(key__exact=token).first()
         if selected_token:
             self.authuser = CustomUser.objects.filter(id=selected_token.user.id)
@@ -190,3 +193,48 @@ class MangerAcceptRejectPatients(AcceptRejectParentApi):
             else:
                 send_error = serializer.errors
             return Response(send_error, status=status.HTTP_400_BAD_REQUEST)
+
+class ManagerGetInfoAPi(ListAPIView):
+    serializer_class = MangerBussinessInfo
+    permission_classes = [ManagerPermission]
+    def initial(self, request, *args, **kwargs):
+        token = self.request.headers['Authorization'].split(' ')[1]
+
+        selected_token = Token.objects.filter(key__exact=token).first()
+        if selected_token:
+            self.authuser = CustomUser.objects.filter(id=selected_token.user.id)
+            self.request.user = self.authuser.first()
+        self.check_permissions(self.request)
+    def get(self, request, *args, **kwargs):
+        all_users=CustomUser.objects.all()
+        all_patients=all_users.filter(role__exact='patient')
+        number_of_acceptedpatients=all_users.filter(role__exact='patient',accept=True).count()
+        number_of_acceptedcounselors=all_users.filter(role__exact='counselor',accept=True).count()
+        number_of_rejectedpatients=all_users.filter(role__exact='patient',accept=True).count()
+        number_of_rejectedcounselors=all_users.filter(role__exact='counselor',accept=False).count()
+        all_doctors=CustomUser.objects.filter(role__exact='doctor').all()
+        all_counselors=CustomUser.objects.filter(role__exact='counselor').all()
+        number_of_active_doctors=DoctorAppointment.objects.filter(Doctor__in=all_doctors).values_list('Doctor__email',flat=True).distinct()
+        number_of_inactive_doctors=all_doctors.exclude(email__in=number_of_active_doctors).values_list('email',flat=True).distinct()
+        number_of_active_doctors=number_of_active_doctors.count()
+        number_of_inactive_doctors=number_of_inactive_doctors.count()
+        number_of_active_counselors=CounselorAppointment.objects.filter(Counselor__in=all_counselors).values_list('Counselor__email',flat=True).distinct()
+        number_of_inactive_counselors=all_counselors.exclude(email__in=number_of_active_counselors).values_list('email',flat=True).distinct()
+        number_of_active_counselors=number_of_active_counselors.count()
+        numbers_of_selfassessments=SelfAssessment.objects.filter().values_list('Patient__email',flat=True)
+        number_of_patients_withot_selfasssessment=all_patients.exclude(email__in=numbers_of_selfassessments).count()
+        number_of_inactive_counselors=number_of_inactive_counselors.count()
+        numbers_of_patients_appointment_counselors=CounselorAppointment.objects.filter(Patient__in=all_patients,Appointment__isnull=False).count()
+
+        return Response({"number_of_acceptedpatients":number_of_acceptedpatients,
+                         "number_of_acceptedcounselors":number_of_acceptedcounselors,
+                         "number_of_rejectedpatients":number_of_rejectedpatients,
+                         "number_of_rejectedcounselors":number_of_rejectedcounselors,
+                         "number_of_patients_without_selfasssessment":number_of_patients_withot_selfasssessment,
+                         "numbers_of_patients_appointment_counselors":numbers_of_patients_appointment_counselors,
+                         "all_doctors":all_doctors.count(),
+                         "all_counselors":all_counselors.count(),
+                         "number_of_active_doctors":number_of_active_doctors,
+                         "number_of_inactive_doctors":number_of_inactive_doctors,
+                         "number_of_inactive_counselors":number_of_inactive_counselors,
+                         "number_of_active_counselors":number_of_active_counselors})

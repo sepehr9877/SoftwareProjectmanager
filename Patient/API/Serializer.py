@@ -23,3 +23,4 @@ class Patien_witht_CounselorAppointmentSerialzier(Serializer):
     AssigntoDoctor=BooleanField(read_only=True)
     Counselor=EmailField(read_only=True,allow_null=True)
     Doctor=EmailField(read_only=True,allow_null=True)
+

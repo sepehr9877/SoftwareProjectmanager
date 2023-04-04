@@ -30,4 +30,6 @@ class GetPateintAppointmentwithDoctor(ParentPatientApi):
         queryset=DoctorAppointment.objects.filter(Patient_id=self.authuser.id).all()
         return queryset
 
+
+
 # Create your views here.
