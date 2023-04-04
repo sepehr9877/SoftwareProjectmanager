@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework.serializers import Serializer,EmailField,BooleanField,CharField,DateTimeField
 
 from Account.models import CustomUser
+from Questions.models import SelfAssessment
 
 
 class AcceptRejectDoctorSerializer(Serializer):
@@ -111,3 +112,18 @@ class MangerDateCounselorPatientSerilizer(Serializer):
         Doctor = CharField(read_only=True)
 
 
+
+class MangerBussinessInfo(Serializer):
+    number_of_acceptedcounselors=CharField(read_only=True)
+    # number_of_rejectedpatients=CharField(read_only=True)
+    # number_of_rejectedcounselors=CharField(read_only=True)
+    # number_of_available_doctors=CharField(read_only=True)
+    # number_of_available_counselors=CharField(read_only=True)
+    # number_of_inactive_doctors=CharField(read_only=True)
+    # number_of_inactive_counselors=CharField(read_only=True)
+    # number_of_inactive_patients=CharField(read_only=True)
+    def to_representation(self, instance):
+        print("e")
+        data=super().to_representation(instance)
+        data['number_of_acceptedcounselors']=1
+        return data
