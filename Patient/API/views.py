@@ -65,12 +65,20 @@ class RejectAppointmentwithDocotrApi(ListAPIView):
             id=self.request.data.get('id')
             accept=self.request.data.get('Accept')
             desc=self.request.data.get('Description')
+            rejected = False
+            assessment = True
+            if (accept == True):
+                rejected = False
+                assessment = True
+            else:
+                assessment = False
+                rejected = True
             update_selected_appointment=DoctorAppointment.objects.filter(id=id).update(
                 Accept=accept,
-                Description=desc,Appointment=None
+                Description=desc,RejectedByPatient=rejected
             )
             selected_selfassessment=CustomUser.objects.filter(email__exact=self.authuser.email).update(
-                assessment=False
+                assessment=assessment
             )
             selected_appointment=DoctorAppointment.objects.filter(id=id)
             serializer_data=AppointmentRejectionDoctorSerializer(selected_appointment,many=True)
@@ -117,12 +125,20 @@ class RejectAppointmentwithCounselorApi(ListAPIView):
             id=self.request.data.get('id')
             accept=self.request.data.get('Accept')
             desc=self.request.data.get('Description')
+            rejected=False
+            assessment=True
+            if(accept==True):
+                rejected=False
+                assessment=True
+            else:
+                assessment=False
+                rejected=True
             update_selected_appointment=CounselorAppointment.objects.filter(id=id).update(
                 Accept=accept,
-                Description=desc,Appointment=None
+                Description=desc,RejectedByPatient=rejected
             )
             selected_assessment=CustomUser.objects.filter(email__exact=self.authuser.email).update(
-                assessment=False
+                assessment=assessment
             )
             selected_appointment=CounselorAppointment.objects.filter(id=id)
             serializer_data=AppointmentRejectionCounselorSerializer(selected_appointment,many=True)
