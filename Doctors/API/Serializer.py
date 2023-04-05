@@ -208,3 +208,4 @@ class DoctorCreateNewAppointment(Serializer):
         else:
             self.selected_next_appointmet = selected_appointment.first().Appointment
             return True
+
