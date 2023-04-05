@@ -32,9 +32,6 @@ class PatientCounselorAppointmentSerialzier(Serializer):
         if selected_patient.first() is None:
             self.error=True
             raise  ValidationError({"Error":"You are sending a wrong id"})
-        if selected_patient.first().Counselor:
-            self.error = True
-            raise ValidationError({"Error": "This record was already booked or rejected"})
 
         if selected_patient.first().Patient.email !=patient:
             self.error=True
@@ -68,6 +65,7 @@ class PatientCounselorAppointmentSerialzier(Serializer):
         PatientEmail=validated_data.get('Patient')
         Description=validated_data.get('Description')
         selected_appointment=CounselorAppointment.objects.filter(id=id)
+        authuser=self.context['authuser']
         if(selected_appointment.first().Accept==False):
             return Response({"Error":"This meeting was already canceled by a counselor"},status=status.HTTP_400_BAD_REQUEST)
         if (selected_appointment.first().Counselor is None and Accept==False):
@@ -78,8 +76,10 @@ class PatientCounselorAppointmentSerialzier(Serializer):
                 assessment=False
             )
             return Response({"detail":f"Appointment is rejected and User {selected_appointment.first().Patient.email} has to fill the assessment form again"},status=status.HTTP_200_OK)
-        if(selected_appointment.first().Counselor is None and Accept==True):
-            has_appointment=self.check_appointment(counselor=counselor,appointment=appointment)
+        if (selected_appointment.first().Counselor.email!=authuser.email):
+            return Response({"Error":"This record is for another counselor"},status=status.HTTP_400_BAD_REQUEST)
+        if(Accept==True):
+            has_appointment=self.check_appointment(counselor=counselor,appointment=appointment,id=id)
             if has_appointment==True:
                 return Response({
                                     "Error": f"have another appointment at {self.selected_next_appointmet.time()} on {self.selected_next_appointmet.day}th"},
@@ -103,7 +103,7 @@ class PatientCounselorAppointmentSerialzier(Serializer):
                                  "AssigntoDoctor":selected_counselor_appointment.AssigntoDoctor,
                                  "Description":selected_counselor_appointment.Description,
                                  "Doctor":selected_counselor_appointment.Doctor},status=status.HTTP_200_OK)
-    def check_appointment(self,appointment,counselor):
+    def check_appointment(self,appointment,counselor,id):
         selected_time = appointment.split('T')
         time_obj = datetime.strptime(selected_time[1], '%H:%M:%S')
         next_obj_time = time_obj + timedelta(hours=1)
@@ -113,6 +113,7 @@ class PatientCounselorAppointmentSerialzier(Serializer):
         next_appointment = selected_time[0] + "T" + next_time_str
         pre_appointment=selected_time[0] + "T" + pre_obj_str
         selected_appointment=CounselorAppointment.objects.filter(Counselor_id=counselor.id,Appointment__lte=next_appointment,Appointment__gte=pre_appointment)
+        selected_appointment=selected_appointment.exclude(id=id)
         if selected_appointment.first() is None:
             return False
         else:
