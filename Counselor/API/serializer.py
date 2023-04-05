@@ -65,8 +65,6 @@ class PatientCounselorAppointmentSerialzier(Serializer):
         Description=validated_data.get('Description')
         selected_appointment=CounselorAppointment.objects.filter(id=id)
         authuser=self.context['authuser']
-        print(authuser.email)
-        print(selected_appointment.first().Counselor.email)
         if(selected_appointment.first().Counselor!=None and authuser.email!=selected_appointment.first().Counselor.email):
             return Response({"Error": "this meeting was already taken  by another counselor"},
                             status=status.HTTP_400_BAD_REQUEST)
