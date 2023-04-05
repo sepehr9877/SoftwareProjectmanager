@@ -10,6 +10,7 @@ class DoctorAppointment(models.Model):
     Appointment=models.DateTimeField(null=True,blank=True)
     Accept=models.BooleanField(default=True)
     Description=models.CharField(max_length=100,null=True,blank=True)
+    RejectedByPatient=models.BooleanField(default=False)
 
 class ModelFormDoctorAppointment(forms.ModelForm):
     class Meta:

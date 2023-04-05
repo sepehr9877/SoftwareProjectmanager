@@ -70,6 +70,7 @@ class ManagerDateDocotorPatientSerializer(Serializer):
     Appointment = DateTimeField(read_only=True)
     Accept = BooleanField(read_only=True)
     Description =CharField(read_only=True)
+    RejectedByPatient = BooleanField(read_only=True)
 
 class AcceptRejectPatientSerializer(Serializer):
     first_name=CharField(read_only=True)
@@ -110,6 +111,7 @@ class MangerDateCounselorPatientSerilizer(Serializer):
         Description =CharField(read_only=True)
         AssigntoDoctor =BooleanField(read_only=True)
         Doctor = CharField(read_only=True)
+        RejectedByPatient = BooleanField(read_only=True)
 
 
 

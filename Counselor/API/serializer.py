@@ -20,6 +20,7 @@ class PatientCounselorAppointmentSerialzier(Serializer):
     AssigntoDoctor=BooleanField(read_only=True)
     Counselor=EmailField(read_only=True,allow_null=True)
     Doctor=EmailField(read_only=True,allow_null=True)
+    RejectedByPatient = BooleanField(read_only=True)
     def __init__(self,*args,**kwargs):
         super().__init__(*args,**kwargs)
         self.error = False
@@ -66,6 +67,10 @@ class PatientCounselorAppointmentSerialzier(Serializer):
         Description=validated_data.get('Description')
         selected_appointment=CounselorAppointment.objects.filter(id=id)
         authuser=self.context['authuser']
+        if(selected_appointment.first().RejectedByPatient==True):
+            return Response({"Error": "This meeting was already canceled by the patient"},
+                            status=status.HTTP_400_BAD_REQUEST)
+
         if(selected_appointment.first().Accept==False):
             return Response({"Error":"This meeting was already canceled by a counselor"},status=status.HTTP_400_BAD_REQUEST)
         if (selected_appointment.first().Counselor is None and Accept==False):
@@ -76,7 +81,7 @@ class PatientCounselorAppointmentSerialzier(Serializer):
                 assessment=False
             )
             return Response({"detail":f"Appointment is rejected and User {selected_appointment.first().Patient.email} has to fill the assessment form again"},status=status.HTTP_200_OK)
-        if (selected_appointment.first().Counselor.email!=authuser.email):
+        if (selected_appointment.first().Counselor!=None and selected_appointment.first().Counselor.email!=authuser.email):
             return Response({"Error":"This record is for another counselor"},status=status.HTTP_400_BAD_REQUEST)
         if(Accept==True):
             has_appointment=self.check_appointment(counselor=counselor,appointment=appointment,id=id)
@@ -102,7 +107,8 @@ class PatientCounselorAppointmentSerialzier(Serializer):
                                  "Accept":selected_counselor_appointment.Accept,
                                  "AssigntoDoctor":selected_counselor_appointment.AssigntoDoctor,
                                  "Description":selected_counselor_appointment.Description,
-                                 "Doctor":selected_counselor_appointment.Doctor},status=status.HTTP_200_OK)
+                                 "Doctor":selected_counselor_appointment.Doctor,
+                                 "RejectedByPatient":selected_counselor_appointment.RejectedByPatient},status=status.HTTP_200_OK)
     def check_appointment(self,appointment,counselor,id):
         selected_time = appointment.split('T')
         time_obj = datetime.strptime(selected_time[1], '%H:%M:%S')
@@ -191,7 +197,8 @@ class CounselorMangeDoctors(Serializer):
             "Doctor":create_appointment_with_doctor.Doctor.email,
             "Patient":create_appointment_with_doctor.Patient.email,
             "Description":description,
-            "Accept":create_appointment_with_doctor.Accept
+            "Accept":create_appointment_with_doctor.Accept,
+            "RejectedByPatient":create_appointment_with_doctor.RejectedByPatient
         },status=status.HTTP_200_OK)
 
 class ListofDoctorsSerializer(Serializer):

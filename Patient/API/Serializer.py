@@ -14,6 +14,7 @@ class PatientwithDoctorSerializer(Serializer):
     Accept=BooleanField(required=True)
     Appointment=DateTimeField(allow_null=True,required=True)
     Description=CharField(allow_null=True,allow_blank=True,required=True)
+    RejectedByPatient =BooleanField(read_only=True)
 
 class Patien_witht_CounselorAppointmentSerialzier(Serializer):
     id=CharField(required=True)
@@ -27,15 +28,17 @@ class Patien_witht_CounselorAppointmentSerialzier(Serializer):
     AssigntoDoctor=BooleanField(read_only=True)
     Counselor=EmailField(read_only=True,allow_null=True)
     Doctor=EmailField(read_only=True,allow_null=True)
+    RejectedByPatient = BooleanField(read_only=True)
 
 
 class AppointmentRejectionDoctorSerializer(Serializer):
     id = CharField(required=True)
     Doctor=EmailField(read_only=True)
     Patient=EmailField(read_only=True)
-    Accept =BooleanField(required=True)
+    RejectedByPatient =BooleanField(read_only=True)
     Appointment=DateTimeField(read_only=True)
     Description=CharField(required=True)
+    Accept=BooleanField(required=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -65,7 +68,7 @@ class AppointmentRejectionCounselorSerializer(Serializer):
     Accept =BooleanField(required=True)
     Appointment=DateTimeField(read_only=True)
     Description=CharField(required=True)
-
+    RejectedByPatient =BooleanField(read_only=True)
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.error = False

@@ -18,6 +18,7 @@ class DoctorPatientSerializer(Serializer):
     Accept=BooleanField(required=True)
     Appointment=DateTimeField(allow_null=True,required=True)
     Description=CharField(allow_null=True,allow_blank=True,required=True)
+    RejectedByPatient=BooleanField(read_only=True)
     def to_representation(self, instance):
         data=super().to_representation(instance)
         data['Firstname']=instance.Firstname
@@ -71,6 +72,8 @@ class DoctorPatientSerializer(Serializer):
         description=validated_data.get('Description')
         authuser=self.context['authuser']
         selected_doctor_patient=DoctorAppointment.objects.filter(id=id)
+        if(selected_doctor_patient.first().RejectedByPatient==True):
+            return Response({"Error":"the patient already rejected the appointment"},status=status.HTTP_400_BAD_REQUEST)
         if selected_doctor_patient.first().Accept==False:
             return Response({"Error":f"the patient {patient} was already rejected by {selected_doctor_patient.first().Doctor.email}"},status=status.HTTP_400_BAD_REQUEST)
         if selected_doctor_patient.first().Doctor.email!=authuser.email:
@@ -104,7 +107,8 @@ class DoctorPatientSerializer(Serializer):
                                  "Lastname":selected_appointment.Patient.last_name,
                                  "Status":selected_appointment.Accept,
                                  "Appointment":selected_appointment.Appointment,
-                                 "Description":selected_appointment.Description},status=status.HTTP_201_CREATED)
+                                 "Description":selected_appointment.Description,
+                                 "RejectedByPatient":selected_appointment.RejectedByPatient},status=status.HTTP_201_CREATED)
         else:
             selected_doctor=selected_doctor_patient.first().Doctor.email
             has_appointment = self.check_appointment(appointment=appointment, doctor=doctor,id=id)
@@ -127,7 +131,8 @@ class DoctorPatientSerializer(Serializer):
                                      "Lastname": selected_appointment.Patient.last_name,
                                      "Status": selected_appointment.Accept,
                                      "Appointment": selected_appointment.Appointment,
-                                     "Description": selected_appointment.Description}, status=status.HTTP_201_CREATED)
+                                     "Description": selected_appointment.Description,
+                                     "RejectedByPatient":selected_appointment.RejectedByPatient}, status=status.HTTP_201_CREATED)
             else:
                 return Response({"Error":f"Patient {patient} has another meeting on {selected_doctor_patient.first().Appointment.day}th at {selected_doctor_patient.first().Appointment.time()}"},status=status.HTTP_400_BAD_REQUEST)
 

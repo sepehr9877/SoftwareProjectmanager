@@ -10,6 +10,7 @@ class CounselorAppointment(models.Model):
     Description=models.CharField(max_length=100,null=True,blank=True)
     AssigntoDoctor=models.BooleanField(default=False)
     Doctor=models.ForeignKey(CustomUser,on_delete=models.CASCADE,related_name='Assinged_Doctor',null=True,blank=True)
+    RejectedByPatient=models.BooleanField(default=False)
 
 
 class ModelFormCounselorAppointment(forms.ModelForm):
