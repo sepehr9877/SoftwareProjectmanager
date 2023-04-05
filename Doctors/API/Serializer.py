@@ -88,7 +88,7 @@ class DoctorPatientSerializer(Serializer):
                 return Response({"Error":f"Doctor {authuser.email} is rejecting patient {patient} ,please provide a description for it"},status=status.HTTP_400_BAD_REQUEST)
 
         if selected_doctor_patient.first().Appointment is None:
-            has_appointment = self.check_appointment(appointment=appointment, doctor=doctor)
+            has_appointment = self.check_appointment(appointment=appointment, doctor=doctor,id=id)
             if has_appointment==True:
                 return Response({"Error":f"have another appointment in {self.selected_next_appointmet.time()} on {self.selected_next_appointmet.day}th"},status=status.HTTP_400_BAD_REQUEST)
             else:
@@ -107,7 +107,7 @@ class DoctorPatientSerializer(Serializer):
                                  "Description":selected_appointment.Description},status=status.HTTP_201_CREATED)
         else:
             selected_doctor=selected_doctor_patient.first().Doctor.email
-            has_appointment = self.check_appointment(appointment=appointment, doctor=doctor)
+            has_appointment = self.check_appointment(appointment=appointment, doctor=doctor,id=id)
             if selected_doctor==authuser.email:
 
                 if has_appointment == True:
@@ -131,7 +131,7 @@ class DoctorPatientSerializer(Serializer):
             else:
                 return Response({"Error":f"Patient {patient} has another meeting on {selected_doctor_patient.first().Appointment.day}th at {selected_doctor_patient.first().Appointment.time()}"},status=status.HTTP_400_BAD_REQUEST)
 
-    def check_appointment(self, appointment, doctor):
+    def check_appointment(self, appointment, doctor,id):
         selected_time = appointment.split('T')
         time_obj = datetime.strptime(selected_time[1], '%H:%M:%S')
         next_obj_time = time_obj + timedelta(hours=1)
@@ -143,6 +143,7 @@ class DoctorPatientSerializer(Serializer):
         selected_appointment = DoctorAppointment.objects.filter(Doctor_id=doctor.id,
                                                                    Appointment__lte=next_appointment,
                                                                    Appointment__gte=pre_appointment)
+        selected_appointment=selected_appointment.exclude(id=id)
         if selected_appointment.first() is None:
             return False
         else:
