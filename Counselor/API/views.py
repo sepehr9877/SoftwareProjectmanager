@@ -49,7 +49,9 @@ class CounselorAllPatient(ListAPIView):
     def put(self,request,*args,**kwargs):
         data=self.request.data
         serializer=PatientCounselorAppointmentSerialzier(data=data)
+        serializer.context['authuser']=self.authuser.first()
         if serializer.is_valid():
+
             return serializer.update(counselor=self.authuser.first(),validated_data=data)
         else:
                 error = json.dumps(serializer.errors)
