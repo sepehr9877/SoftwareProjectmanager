@@ -118,3 +118,6 @@ class DoctorGetAppointmentApi(DoctorParentApi):
             obj.Lastname=query.filter(id=obj.id).first().Patient.last_name
         return query
 
+
+
+
